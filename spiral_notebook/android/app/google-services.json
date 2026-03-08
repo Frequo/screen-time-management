@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "154190462867",
+    "project_id": "hydroflask-acdaa",
+    "storage_bucket": "hydroflask-acdaa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154190462867:android:d58919f619975fb6117266",
+        "android_client_info": {
+          "package_name": "com.example.spiral_notebook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyN8if7JnYNLMPby9UhqcmpExukw9eSyA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
