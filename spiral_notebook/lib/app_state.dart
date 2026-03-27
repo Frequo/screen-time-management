@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
@@ -79,7 +81,18 @@ class FocusSessionResult {
 }
 
 class SpiralAppState extends ChangeNotifier {
-  SpiralAppState();
+  SpiralAppState({this.firebaseEnabled = false}) {
+    if (!firebaseEnabled) {
+      return;
+    }
+
+    _syncFromFirebaseUser(FirebaseAuth.instance.currentUser, notify: false);
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      User? user,
+    ) {
+      _syncFromFirebaseUser(user);
+    });
+  }
 
   static const int pullCost = 100;
   static const int pityLimit = 200;
@@ -88,11 +101,15 @@ class SpiralAppState extends ChangeNotifier {
   final Random _random = Random();
   final List<GameCharacter> roster = _characterRoster;
   final Map<String, int> _collection = <String, int>{};
+  final bool firebaseEnabled;
 
+  StreamSubscription<User?>? _authSubscription;
   Timer? _focusTicker;
 
   bool isLoggedIn = false;
   String playerName = '';
+  String playerEmail = '';
+  String? playerId;
   AppDifficulty difficulty = AppDifficulty.highSchool;
   bool soundEnabled = true;
   bool hapticsEnabled = true;
@@ -139,19 +156,50 @@ class SpiralAppState extends ChangeNotifier {
   double get dailyProgress =>
       dailyTargetMinutes == 0 ? 0 : dailyProgressMinutes / dailyTargetMinutes;
 
-  void login(String value) {
-    final String trimmed = value.trim();
-    playerName = trimmed.isEmpty ? 'Focus Keeper' : trimmed;
-    isLoggedIn = true;
-    notifyListeners();
+  Future<void> login({
+    required String displayName,
+    required String email,
+  }) async {
+    final String trimmedEmail = email.trim();
+    final String normalizedName = _normalizedName(
+      displayName: displayName,
+      email: trimmedEmail,
+    );
+
+    if (!firebaseEnabled) {
+      _applyLocalLogin(normalizedName, trimmedEmail);
+      return;
+    }
+
+    User user =
+        FirebaseAuth.instance.currentUser ??
+        (await FirebaseAuth.instance.signInAnonymously()).user!;
+
+    await user.updateDisplayName(normalizedName);
+    await user.reload();
+    user = FirebaseAuth.instance.currentUser ?? user;
+
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      'displayName': normalizedName,
+      'email': trimmedEmail,
+      'isAnonymous': user.isAnonymous,
+      'lastLoginAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
   }
 
-  void logout() {
+  Future<void> logout() async {
     _stopTicker();
     isFocusActive = false;
     currentSessionSeconds = 0;
-    playerName = '';
-    isLoggedIn = false;
+
+    if (firebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      await FirebaseAuth.instance.signOut();
+      return;
+    }
+
+    _clearSession();
     notifyListeners();
   }
 
@@ -322,12 +370,68 @@ class SpiralAppState extends ChangeNotifier {
   @override
   void dispose() {
     _stopTicker();
+    _authSubscription?.cancel();
     super.dispose();
   }
 
   void _stopTicker() {
     _focusTicker?.cancel();
     _focusTicker = null;
+  }
+
+  void _applyLocalLogin(String name, String email) {
+    playerName = name;
+    playerEmail = email;
+    playerId = null;
+    isLoggedIn = true;
+    notifyListeners();
+  }
+
+  void _clearSession() {
+    playerName = '';
+    playerEmail = '';
+    playerId = null;
+    isLoggedIn = false;
+  }
+
+  String _normalizedName({required String displayName, required String email}) {
+    final String trimmedName = displayName.trim();
+    if (trimmedName.isNotEmpty) {
+      return trimmedName;
+    }
+
+    if (email.contains('@')) {
+      return email.split('@').first;
+    }
+
+    return 'username';
+  }
+
+  void _syncFromFirebaseUser(
+    User? user, {
+    String? fallbackEmail,
+    bool notify = true,
+  }) {
+    if (user == null) {
+      _clearSession();
+      if (notify) {
+        notifyListeners();
+      }
+      return;
+    }
+
+    final String resolvedEmail = user.email ?? fallbackEmail ?? playerEmail;
+    playerName = _normalizedName(
+      displayName: user.displayName ?? '',
+      email: resolvedEmail,
+    );
+    playerEmail = resolvedEmail;
+    playerId = user.uid;
+    isLoggedIn = true;
+
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   CharacterRarity _rollRarity({required bool guaranteedLegendary}) {

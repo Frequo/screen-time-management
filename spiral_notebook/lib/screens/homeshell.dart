@@ -32,7 +32,7 @@ class _HomeShellState extends State<HomeShell> {
           FocusScreen(appState: widget.appState),
         ];
 
-        final List<String> titles = <String>['Gacha', 'Base Camp', 'Focus'];
+        final List<String> titles = <String>['Gacha', 'Backpack', 'Focus'];
 
         return Scaffold(
           extendBody: true,
@@ -44,7 +44,7 @@ class _HomeShellState extends State<HomeShell> {
                 Text(
                   widget.appState.playerName.isEmpty
                       ? 'Spiral Notebook'
-                      : 'Welcome back, ${widget.appState.playerName}',
+                      : 'Welcome back, ${widget.appState.playerName}!',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

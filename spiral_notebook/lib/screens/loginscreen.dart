@@ -13,6 +13,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -117,16 +119,37 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               helperText:
-                                  'Local prototype sign-in. Firebase auth can replace this later.',
+                                  'Uses Firebase on configured mobile builds and keeps a local fallback elsewhere.',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.mail_outline_rounded),
                             ),
                           ),
+                          if (_errorMessage != null) ...<Widget>[
+                            const SizedBox(height: 12),
+                            Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           FilledButton.icon(
-                            onPressed: _enterApp,
-                            icon: const Icon(Icons.arrow_forward_rounded),
-                            label: const Text('Enter notebook'),
+                            onPressed: _isSubmitting ? null : _enterApp,
+                            icon: _isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.arrow_forward_rounded),
+                            label: Text(
+                              _isSubmitting
+                                  ? 'Connecting...'
+                                  : 'Enter notebook',
+                            ),
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
@@ -167,14 +190,42 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _enterApp() {
+  Future<void> _enterApp() async {
     final String rawName = _nameController.text.trim();
     final String email = _emailController.text.trim();
-    final String fallbackName = email.contains('@')
-        ? email.split('@').first
-        : '';
-    widget.appState.login(rawName.isEmpty ? fallbackName : rawName);
-    Navigator.pushReplacementNamed(context, '/app');
+
+    if (email.isEmpty) {
+      setState(() {
+        _errorMessage = 'Enter an email so the Firebase profile can be saved.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.appState.login(displayName: rawName, email: email);
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushReplacementNamed(context, '/app');
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _errorMessage = 'Sign-in failed. ${error.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 }
 

@@ -87,8 +87,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 FilledButton.tonalIcon(
-                  onPressed: () {
-                    appState.logout();
+                  onPressed: () async {
+                    await appState.logout();
+                    if (!context.mounted) {
+                      return;
+                    }
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/login',

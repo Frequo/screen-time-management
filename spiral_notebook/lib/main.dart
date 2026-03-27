@@ -1,32 +1,48 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/firebase_options.dart';
 import 'package:spiral_notebook/routes.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  final bool firebaseEnabled = await _initializeFirebase();
+  runApp(MyApp(appState: SpiralAppState(firebaseEnabled: firebaseEnabled)));
+}
+
+Future<bool> _initializeFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    return true;
+  } on UnsupportedError {
+    return false;
+  } on FirebaseException {
+    return false;
+  }
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.appState});
+
+  final SpiralAppState appState;
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  final SpiralAppState _appState = SpiralAppState();
-
   @override
   void dispose() {
-    _appState.dispose();
+    widget.appState.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _appState,
+      animation: widget.appState,
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -77,9 +93,9 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ),
-          initialRoute: _appState.isLoggedIn ? '/app' : '/login',
+          initialRoute: widget.appState.isLoggedIn ? '/app' : '/login',
           onGenerateRoute: (RouteSettings settings) =>
-              onGenerateAppRoute(settings, _appState),
+              onGenerateAppRoute(settings, widget.appState),
         );
       },
     );
