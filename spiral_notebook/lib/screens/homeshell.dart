@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/focusscreen.dart';
 import 'package:spiral_notebook/screens/gachascreen.dart';
@@ -17,10 +18,37 @@ class _HomeShellState extends State<HomeShell> {
   int _selectedIndex = 1;
 
   @override
+  void initState() {
+    super.initState();
+    widget.appState.addListener(_syncSystemUi);
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.appState == widget.appState) {
+      return;
+    }
+
+    oldWidget.appState.removeListener(_syncSystemUi);
+    widget.appState.addListener(_syncSystemUi);
+  }
+
+  @override
+  void dispose() {
+    widget.appState.removeListener(_syncSystemUi);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.appState,
       builder: (BuildContext context, Widget? child) {
+        final bool immersiveFocus =
+            (widget.appState.isFocusActive || widget.appState.isFocusPaused) &&
+            _selectedIndex == 2;
         final List<Widget> screens = <Widget>[
           GachaScreen(appState: widget.appState),
           InventoryScreen(
@@ -35,67 +63,74 @@ class _HomeShellState extends State<HomeShell> {
         final List<String> titles = <String>['Gacha', 'Backpack', 'Focus'];
 
         return Scaffold(
-          extendBody: true,
-          appBar: AppBar(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(titles[_selectedIndex]),
-                Text(
-                  widget.appState.playerName.isEmpty
-                      ? 'Spiral Notebook'
-                      : 'Welcome back, ${widget.appState.playerName}!',
-                  style: Theme.of(context).textTheme.bodySmall,
+          extendBody: !immersiveFocus,
+          appBar: immersiveFocus
+              ? null
+              : AppBar(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(titles[_selectedIndex]),
+                      Text(
+                        widget.appState.playerName.isEmpty
+                            ? 'Nexi'
+                            : 'Welcome back, ${widget.appState.playerName}!',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                  actions: _buildActions(context),
                 ),
-              ],
-            ),
-            actions: _buildActions(context),
-          ),
           body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[
-                  Color(0xFFF8F1E6),
-                  Color(0xFFF4E0BE),
-                  Color(0xFFE7F0EB),
-                ],
-              ),
-            ),
+            color: immersiveFocus
+                ? const Color(0xFF121826)
+                : const Color(0xFFF0F4F2),
             child: SafeArea(
-              top: false,
+              top: !immersiveFocus,
+              bottom: !immersiveFocus,
               child: IndexedStack(index: _selectedIndex, children: screens),
             ),
           ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: NavigationBar(
-              selectedIndex: _selectedIndex,
-              backgroundColor: Colors.white.withValues(alpha: 0.95),
-              onDestinationSelected: (int value) {
-                setState(() {
-                  _selectedIndex = value;
-                });
-              },
-              destinations: const <NavigationDestination>[
-                NavigationDestination(
-                  icon: Icon(Icons.auto_awesome),
-                  label: 'Gacha',
+          bottomNavigationBar: immersiveFocus
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: NavigationBar(
+                    selectedIndex: _selectedIndex,
+                    backgroundColor: Colors.white,
+                    onDestinationSelected: (int value) {
+                      setState(() {
+                        _selectedIndex = value;
+                      });
+                      _syncSystemUi();
+                    },
+                    destinations: const <NavigationDestination>[
+                      NavigationDestination(
+                        icon: Icon(Icons.auto_awesome),
+                        label: 'Gacha',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.home_rounded),
+                        label: 'Inventory',
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.hourglass_bottom),
+                        label: 'Focus',
+                      ),
+                    ],
+                  ),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.home_rounded),
-                  label: 'Inventory',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.hourglass_bottom),
-                  label: 'Focus',
-                ),
-              ],
-            ),
-          ),
         );
       },
+    );
+  }
+
+  void _syncSystemUi() {
+    final bool immersive =
+        (widget.appState.isFocusActive || widget.appState.isFocusPaused) &&
+        _selectedIndex == 2;
+    SystemChrome.setEnabledSystemUIMode(
+      immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
     );
   }
 

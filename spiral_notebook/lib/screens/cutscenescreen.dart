@@ -54,18 +54,8 @@ class _CutsceneScreenState extends State<CutsceneScreen>
     }
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              const Color(0xFF1B2845),
-              character.accent.withValues(alpha: 0.75),
-              const Color(0xFFFFF4E4),
-            ],
-          ),
-        ),
+      body: ColoredBox(
+        color: const Color(0xFF1B2845),
         child: SafeArea(
           child: Center(
             child: Padding(

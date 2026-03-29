@@ -19,28 +19,28 @@ class _InfoScreenState extends State<InfoScreen> {
       title: '1. Park the phone',
       body:
           'Set the phone on a stand where it is visible but out of your hands. The app treats that as your focus station.',
-      accent: Color(0xFFE96B2D),
+      accent: Color(0xFF5DAFA3),
       icon: Icons.phone_iphone_rounded,
     ),
     _InfoSlide(
       title: '2. Match the workload',
       body:
-          'Choose an Elementary through College difficulty in Base Camp. That changes how many sparks you earn per minute.',
-      accent: Color(0xFF2F8F83),
+          'Choose an Elementary through College difficulty in Base Camp. That changes how many bits you earn per minute.',
+      accent: Color(0xFF6E9BB8),
       icon: Icons.tune_rounded,
     ),
     _InfoSlide(
       title: '3. Run a focus session',
       body:
           'Start a timed focus block and leave the screen alone. Longer sessions earn better bonuses on top of the minute rate.',
-      accent: Color(0xFF355C9A),
+      accent: Color(0xFF4D6E9F),
       icon: Icons.hourglass_bottom_rounded,
     ),
     _InfoSlide(
       title: '4. Pull and collect',
       body:
-          'Spend sparks in the gacha banner to unlock colorful city characters. Every 200 pulls guarantees a legendary.',
-      accent: Color(0xFFCF7E49),
+          'Spend bits in the gacha banner to unlock colorful city characters. Every 200 pulls guarantees a legendary.',
+      accent: Color(0xFF7DA3A0),
       icon: Icons.auto_awesome,
     ),
   ];
@@ -55,14 +55,8 @@ class _InfoScreenState extends State<InfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('How it works')),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[Color(0xFFF8E8D2), Color(0xFFE7F1EA)],
-          ),
-        ),
+      body: ColoredBox(
+        color: const Color(0xFFF0F4F2),
         child: SafeArea(
           top: false,
           child: Padding(
@@ -93,14 +87,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(28),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: <Color>[
-                                      slide.accent.withValues(alpha: 0.92),
-                                      slide.accent.withValues(alpha: 0.62),
-                                    ],
-                                  ),
+                                  color: slide.accent,
                                 ),
                                 child: Center(
                                   child: Icon(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,31 +14,29 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isSubmitting = false;
+  bool _isCreateAccount = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _errorMessage;
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              Color(0xFFF7D9B6),
-              Color(0xFFF6EDE2),
-              Color(0xFFE1F0EA),
-            ],
-          ),
-        ),
+      body: ColoredBox(
+        color: const Color(0xFFF0F4F2),
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -63,12 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 64,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: <Color>[
-                                      Color(0xFFE96B2D),
-                                      Color(0xFFF2C14E),
-                                    ],
-                                  ),
+                                  color: Color(0xFF5DAFA3),
                                 ),
                                 child: const Icon(
                                   Icons.hourglass_bottom_rounded,
@@ -82,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      'Spiral Notebook',
+                                      'Nexi',
                                       style: Theme.of(context)
                                           .textTheme
                                           .headlineMedium
@@ -92,10 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Stay focused long enough to turn quiet time into sparks, pulls, and a growing city roster.',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyLarge,
+                                      'Study Gacha',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -103,27 +100,106 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                           const SizedBox(height: 28),
-                          TextField(
-                            controller: _nameController,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Display name',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.badge_outlined),
-                            ),
+                          SegmentedButton<bool>(
+                            segments: const <ButtonSegment<bool>>[
+                              ButtonSegment<bool>(
+                                value: false,
+                                icon: Icon(Icons.login_rounded),
+                                label: Text('Sign in'),
+                              ),
+                              ButtonSegment<bool>(
+                                value: true,
+                                icon: Icon(Icons.person_add_alt_1_rounded),
+                                label: Text('Create account'),
+                              ),
+                            ],
+                            selected: <bool>{_isCreateAccount},
+                            onSelectionChanged: (Set<bool> selection) {
+                              setState(() {
+                                _isCreateAccount = selection.first;
+                                _errorMessage = null;
+                              });
+                            },
                           ),
                           const SizedBox(height: 16),
+                          if (_isCreateAccount) ...<Widget>[
+                            TextField(
+                              controller: _nameController,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Display name',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.badge_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               helperText:
-                                  'Uses Firebase on configured mobile builds and keeps a local fallback elsewhere.',
+                                  'Uses Firebase email and password auth on configured mobile builds.',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.mail_outline_rounded),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            textInputAction: _isCreateAccount
+                                ? TextInputAction.next
+                                : TextInputAction.done,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_isCreateAccount) ...<Widget>[
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmPassword,
+                              decoration: InputDecoration(
+                                labelText: 'Confirm password',
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(
+                                  Icons.verified_user_outlined,
+                                ),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureConfirmPassword =
+                                          !_obscureConfirmPassword;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _obscureConfirmPassword
+                                        ? Icons.visibility_off_rounded
+                                        : Icons.visibility_rounded,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                           if (_errorMessage != null) ...<Widget>[
                             const SizedBox(height: 12),
                             Text(
@@ -148,7 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             label: Text(
                               _isSubmitting
                                   ? 'Connecting...'
-                                  : 'Enter notebook',
+                                  : _isCreateAccount
+                                  ? 'Create Nexi account'
+                                  : 'Sign in to Nexi',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -193,10 +271,40 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _enterApp() async {
     final String rawName = _nameController.text.trim();
     final String email = _emailController.text.trim();
+    final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
 
     if (email.isEmpty) {
       setState(() {
-        _errorMessage = 'Enter an email so the Firebase profile can be saved.';
+        _errorMessage = 'Enter the email for your Nexi account.';
+      });
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Enter your password.';
+      });
+      return;
+    }
+
+    if (_isCreateAccount && rawName.isEmpty) {
+      setState(() {
+        _errorMessage = 'Choose a display name for the new account.';
+      });
+      return;
+    }
+
+    if (_isCreateAccount && password.length < 6) {
+      setState(() {
+        _errorMessage = 'Use at least 6 characters for the password.';
+      });
+      return;
+    }
+
+    if (_isCreateAccount && password != confirmPassword) {
+      setState(() {
+        _errorMessage = 'The password confirmation does not match.';
       });
       return;
     }
@@ -207,7 +315,12 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await widget.appState.login(displayName: rawName, email: email);
+      await widget.appState.login(
+        displayName: rawName,
+        email: email,
+        password: password,
+        createAccount: _isCreateAccount,
+      );
       if (!mounted) {
         return;
       }
@@ -217,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       setState(() {
-        _errorMessage = 'Sign-in failed. ${error.toString()}';
+        _errorMessage = _messageForError(error);
       });
     } finally {
       if (mounted) {
@@ -226,6 +339,23 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  String _messageForError(Object error) {
+    if (error is FirebaseAuthException) {
+      return switch (error.code) {
+        'email-already-in-use' => 'That email already has an account.',
+        'invalid-email' => 'Enter a valid email address.',
+        'invalid-credential' => 'The email or password is incorrect.',
+        'user-not-found' => 'No account matches that email.',
+        'wrong-password' => 'The password is incorrect.',
+        'weak-password' => 'Choose a stronger password.',
+        'network-request-failed' => 'Network error while contacting Firebase.',
+        _ => error.message ?? 'Firebase sign-in failed.',
+      };
+    }
+
+    return 'Sign-in failed. ${error.toString()}';
   }
 }
 

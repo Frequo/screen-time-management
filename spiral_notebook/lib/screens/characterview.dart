@@ -13,14 +13,8 @@ class CharacterCollectionScreen extends StatelessWidget {
       builder: (BuildContext context, Widget? child) {
         return Scaffold(
           appBar: AppBar(title: const Text('Character View')),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: <Color>[Color(0xFFF8F1E7), Color(0xFFE9F1EE)],
-              ),
-            ),
+          body: ColoredBox(
+            color: const Color(0xFFF0F4F2),
             child: GridView.builder(
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -122,17 +116,8 @@ class CharacterDetailScreen extends StatelessWidget {
     final int copies = appState.copiesOwned(character);
     return Scaffold(
       appBar: AppBar(title: Text(character.name)),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              character.accent.withValues(alpha: 0.5),
-              const Color(0xFFFFFBF6),
-            ],
-          ),
-        ),
+      body: ColoredBox(
+        color: character.accent.withValues(alpha: 0.18),
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: <Widget>[

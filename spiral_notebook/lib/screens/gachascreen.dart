@@ -18,15 +18,7 @@ class GachaScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[
-                    Color(0xFF431C5D),
-                    Color(0xFF1F7A8C),
-                    Color(0xFFF4A261),
-                  ],
-                ),
+                color: const Color(0xFF2E4051),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +32,7 @@ class GachaScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Trade hard-earned sparks for pulls and fill your modern city roster.',
+                    'Trade hard-earned bits for pulls and fill your modern city roster.',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
@@ -50,7 +42,7 @@ class GachaScreen extends StatelessWidget {
                     spacing: 12,
                     runSpacing: 12,
                     children: <Widget>[
-                      _BannerStat(label: 'Sparks', value: '${appState.sparks}'),
+                      _BannerStat(label: 'Bits', value: '${appState.bits}'),
                       _BannerStat(
                         label: 'Pull cost',
                         value: '${SpiralAppState.pullCost}',
@@ -173,7 +165,7 @@ class GachaScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Not enough sparks yet. Finish another focus session first.',
+            'Not enough bits yet. Finish another focus session first.',
           ),
         ),
       );

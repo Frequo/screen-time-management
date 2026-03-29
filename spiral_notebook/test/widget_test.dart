@@ -10,18 +10,18 @@ void main() {
   ) async {
     await tester.pumpWidget(MyApp(appState: SpiralAppState()));
 
-    expect(find.text('Spiral Notebook'), findsOneWidget);
-    expect(find.text('Enter notebook'), findsOneWidget);
+    expect(find.text('Nexi'), findsOneWidget);
+    expect(find.text('Sign in to Nexi'), findsOneWidget);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Display name'),
-      'Andrew',
-    );
     await tester.enterText(
       find.widgetWithText(TextField, 'Email'),
       'andrew@example.com',
     );
-    await tester.tap(find.text('Enter notebook'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Password'),
+      'secret123',
+    );
+    await tester.tap(find.text('Sign in to Nexi'));
     await tester.pumpAndSettle();
 
     expect(find.text('Difficulty and rewards'), findsOneWidget);

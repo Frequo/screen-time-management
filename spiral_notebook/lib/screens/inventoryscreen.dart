@@ -39,7 +39,7 @@ class InventoryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Choose the workload tier you want this session to represent. Harder tiers slow down your spark gain.',
+                      'Choose the workload tier you want this session to represent. Harder tiers slow down your bit gain.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -55,9 +55,9 @@ class InventoryScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(22),
                               color: option == appState.difficulty
                                   ? option == AppDifficulty.college
-                                        ? const Color(0xFFFFE7D8)
-                                        : const Color(0xFFE8F4EE)
-                                  : const Color(0xFFF7F4EE),
+                                        ? const Color(0xFFE2EDF6)
+                                        : const Color(0xFFE7F3EF)
+                                  : const Color(0xFFF4F8F6),
                               border: Border.all(
                                 color: option == appState.difficulty
                                     ? Theme.of(context).colorScheme.primary
@@ -144,7 +144,7 @@ class InventoryScreen extends StatelessWidget {
                           child: OutlinedButton.icon(
                             onPressed: onOpenGacha,
                             icon: const Icon(Icons.auto_awesome),
-                            label: const Text('Spend sparks in gacha'),
+                            label: const Text('Spend bits in gacha'),
                           ),
                         ),
                       ],
@@ -183,15 +183,7 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            Color(0xFF193B58),
-            Color(0xFF2B6A72),
-            Color(0xFFF1882F),
-          ],
-        ),
+        color: const Color(0xFF23384A),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +207,7 @@ class _HeroCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: <Widget>[
-              _StatPill(label: 'Sparks', value: '${appState.sparks}'),
+              _StatPill(label: 'Bits', value: '${appState.bits}'),
               _StatPill(
                 label: 'Collected',
                 value: '${appState.collectedCount}/42',
@@ -260,7 +252,7 @@ class _HeroCard extends StatelessWidget {
                   value: appState.dailyProgress.clamp(0, 1),
                   backgroundColor: Colors.white24,
                   valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFFFFD166),
+                    Color(0xFF83E0C1),
                   ),
                 ),
               ),

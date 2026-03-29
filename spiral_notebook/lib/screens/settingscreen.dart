@@ -13,14 +13,8 @@ class SettingsScreen extends StatelessWidget {
       builder: (BuildContext context, Widget? child) {
         return Scaffold(
           appBar: AppBar(title: const Text('Settings')),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[Color(0xFFF8EFE3), Color(0xFFE5F1ED)],
-              ),
-            ),
+          body: ColoredBox(
+            color: const Color(0xFFF0F4F2),
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: <Widget>[

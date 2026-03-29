@@ -117,10 +117,11 @@ class SpiralAppState extends ChangeNotifier {
   int dailyTargetMinutes = 90;
   int selectedFocusTarget = 25;
   bool isFocusActive = false;
+  bool isFocusPaused = false;
   int currentSessionSeconds = 0;
   int totalFocusMinutes = 0;
   int bestSessionSeconds = 0;
-  int sparks = 120;
+  int bits = 120;
   int totalPulls = 0;
   int pityCounter = 0;
   FocusSessionResult? lastFocusResult;
@@ -157,8 +158,10 @@ class SpiralAppState extends ChangeNotifier {
       dailyTargetMinutes == 0 ? 0 : dailyProgressMinutes / dailyTargetMinutes;
 
   Future<void> login({
-    required String displayName,
     required String email,
+    required String password,
+    String displayName = '',
+    bool createAccount = false,
   }) async {
     final String trimmedEmail = email.trim();
     final String normalizedName = _normalizedName(
@@ -171,18 +174,32 @@ class SpiralAppState extends ChangeNotifier {
       return;
     }
 
-    User user =
-        FirebaseAuth.instance.currentUser ??
-        (await FirebaseAuth.instance.signInAnonymously()).user!;
+    final UserCredential credential = createAccount
+        ? await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: trimmedEmail,
+            password: password,
+          )
+        : await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: trimmedEmail,
+            password: password,
+          );
 
-    await user.updateDisplayName(normalizedName);
+    User user = credential.user!;
+    final String resolvedName = _normalizedName(
+      displayName: user.displayName ?? normalizedName,
+      email: trimmedEmail,
+    );
+
+    if (user.displayName != resolvedName) {
+      await user.updateDisplayName(resolvedName);
+    }
     await user.reload();
     user = FirebaseAuth.instance.currentUser ?? user;
 
     await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-      'displayName': normalizedName,
+      'displayName': resolvedName,
       'email': trimmedEmail,
-      'isAnonymous': user.isAnonymous,
+      'provider': 'password',
       'lastLoginAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
@@ -192,6 +209,7 @@ class SpiralAppState extends ChangeNotifier {
   Future<void> logout() async {
     _stopTicker();
     isFocusActive = false;
+    isFocusPaused = false;
     currentSessionSeconds = 0;
 
     if (firebaseEnabled && FirebaseAuth.instance.currentUser != null) {
@@ -234,12 +252,15 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   void startFocusSession() {
-    if (isFocusActive) {
+    if (isFocusActive && !isFocusPaused) {
       return;
     }
 
-    currentSessionSeconds = 0;
+    if (!isFocusPaused) {
+      currentSessionSeconds = 0;
+    }
     isFocusActive = true;
+    isFocusPaused = false;
     notifyListeners();
 
     _focusTicker = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
@@ -249,12 +270,13 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   FocusSessionResult? finishFocusSession() {
-    if (!isFocusActive) {
+    if (!isFocusActive && !isFocusPaused) {
       return null;
     }
 
     _stopTicker();
     isFocusActive = false;
+    isFocusPaused = false;
 
     final int rewards = calculateRewardForSeconds(currentSessionSeconds);
     final FocusSessionResult result = FocusSessionResult(
@@ -263,7 +285,7 @@ class SpiralAppState extends ChangeNotifier {
       label: _sessionLabel(currentSessionSeconds),
     );
 
-    sparks += rewards;
+    bits += rewards;
     totalFocusMinutes += currentSessionSeconds ~/ 60;
     bestSessionSeconds = max(bestSessionSeconds, currentSessionSeconds);
     lastFocusResult = result;
@@ -275,7 +297,19 @@ class SpiralAppState extends ChangeNotifier {
   void cancelFocusSession() {
     _stopTicker();
     isFocusActive = false;
+    isFocusPaused = false;
     currentSessionSeconds = 0;
+    notifyListeners();
+  }
+
+  void pauseFocusSession() {
+    if (!isFocusActive) {
+      return;
+    }
+
+    _stopTicker();
+    isFocusActive = true;
+    isFocusPaused = true;
     notifyListeners();
   }
 
@@ -305,11 +339,11 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   GameCharacter? pullCharacter() {
-    if (sparks < pullCost) {
+    if (bits < pullCost) {
       return null;
     }
 
-    sparks -= pullCost;
+    bits -= pullCost;
     totalPulls += 1;
     pityCounter += 1;
 
