@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
 
 class CharacterCollectionScreen extends StatelessWidget {
   const CharacterCollectionScreen({super.key, required this.appState});
@@ -116,8 +117,9 @@ class CharacterDetailScreen extends StatelessWidget {
     final int copies = appState.copiesOwned(character);
     return Scaffold(
       appBar: AppBar(title: Text(character.name)),
-      body: ColoredBox(
-        color: character.accent.withValues(alpha: 0.18),
+      body: RarityBackdrop(
+        rarity: character.rarity,
+        accent: character.accent,
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: <Widget>[

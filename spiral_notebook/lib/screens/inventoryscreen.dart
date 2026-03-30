@@ -8,12 +8,14 @@ class InventoryScreen extends StatelessWidget {
     required this.onStartFocus,
     required this.onOpenGacha,
     required this.onOpenCollection,
+    required this.onOpenSettings,
   });
 
   final SpiralAppState appState;
   final VoidCallback onStartFocus;
   final VoidCallback onOpenGacha;
   final VoidCallback onOpenCollection;
+  final VoidCallback onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +147,18 @@ class InventoryScreen extends StatelessWidget {
                             onPressed: onOpenGacha,
                             icon: const Icon(Icons.auto_awesome),
                             label: const Text('Spend bits in gacha'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onOpenSettings,
+                            icon: const Icon(Icons.tune_rounded),
+                            label: const Text('Open settings'),
                           ),
                         ),
                       ],

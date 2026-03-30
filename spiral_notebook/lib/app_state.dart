@@ -90,7 +90,7 @@ class SpiralAppState extends ChangeNotifier {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
       User? user,
     ) {
-      _syncFromFirebaseUser(user);
+      unawaited(_handleAuthStateChanged(user));
     });
   }
 
@@ -105,6 +105,7 @@ class SpiralAppState extends ChangeNotifier {
 
   StreamSubscription<User?>? _authSubscription;
   Timer? _focusTicker;
+  bool _isHydratingProgress = false;
 
   bool isLoggedIn = false;
   String playerName = '';
@@ -112,8 +113,10 @@ class SpiralAppState extends ChangeNotifier {
   String? playerId;
   AppDifficulty difficulty = AppDifficulty.highSchool;
   bool soundEnabled = true;
+  bool ambientSoundsEnabled = true;
   bool hapticsEnabled = true;
   bool reminderEnabled = true;
+  ThemeMode themeMode = ThemeMode.light;
   int dailyTargetMinutes = 90;
   int selectedFocusTarget = 25;
   bool isFocusActive = false;
@@ -204,6 +207,7 @@ class SpiralAppState extends ChangeNotifier {
     }, SetOptions(merge: true));
 
     _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
+    await _loadProgressFromFirebase();
   }
 
   Future<void> logout() async {
@@ -224,31 +228,49 @@ class SpiralAppState extends ChangeNotifier {
   void setDifficulty(AppDifficulty value) {
     difficulty = value;
     notifyListeners();
+    _persistProgress();
   }
 
   void setFocusTarget(int value) {
     selectedFocusTarget = value;
     notifyListeners();
+    _persistProgress();
   }
 
   void setDailyTarget(int value) {
     dailyTargetMinutes = value;
     notifyListeners();
+    _persistProgress();
   }
 
   void setSoundEnabled(bool value) {
     soundEnabled = value;
     notifyListeners();
+    _persistProgress();
+  }
+
+  void setAmbientSoundsEnabled(bool value) {
+    ambientSoundsEnabled = value;
+    notifyListeners();
+    _persistProgress();
   }
 
   void setHapticsEnabled(bool value) {
     hapticsEnabled = value;
     notifyListeners();
+    _persistProgress();
   }
 
   void setReminderEnabled(bool value) {
     reminderEnabled = value;
     notifyListeners();
+    _persistProgress();
+  }
+
+  void setThemeMode(ThemeMode value) {
+    themeMode = value;
+    notifyListeners();
+    _persistProgress();
   }
 
   void startFocusSession() {
@@ -291,6 +313,7 @@ class SpiralAppState extends ChangeNotifier {
     lastFocusResult = result;
     currentSessionSeconds = 0;
     notifyListeners();
+    _persistProgress();
     return result;
   }
 
@@ -370,6 +393,7 @@ class SpiralAppState extends ChangeNotifier {
     }
 
     notifyListeners();
+    _persistProgress();
     return pulled;
   }
 
@@ -414,6 +438,7 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   void _applyLocalLogin(String name, String email) {
+    _resetProgress();
     playerName = name;
     playerEmail = email;
     playerId = null;
@@ -422,6 +447,7 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   void _clearSession() {
+    _resetProgress();
     playerName = '';
     playerEmail = '';
     playerId = null;
@@ -466,6 +492,132 @@ class SpiralAppState extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
+  }
+
+  Future<void> _handleAuthStateChanged(User? user) async {
+    _syncFromFirebaseUser(user);
+    if (user == null) {
+      return;
+    }
+    await _loadProgressFromFirebase();
+  }
+
+  Future<void> _loadProgressFromFirebase() async {
+    final String? uid = playerId;
+    if (!firebaseEnabled || uid == null) {
+      return;
+    }
+
+    _isHydratingProgress = true;
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final Map<String, dynamic>? data = snapshot.data();
+      if (data == null) {
+        await _persistProgress(force: true);
+        return;
+      }
+
+      final Map<String, dynamic> collectionData =
+          (data['collection'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+      _collection
+        ..clear()
+        ..addEntries(
+          collectionData.entries.map(
+            (MapEntry<String, dynamic> entry) => MapEntry<String, int>(
+              entry.key,
+              (entry.value as num?)?.toInt() ?? 0,
+            ),
+          ),
+        );
+      difficulty = _difficultyFromName(data['difficulty'] as String?);
+      soundEnabled = data['soundEnabled'] as bool? ?? soundEnabled;
+      ambientSoundsEnabled =
+          data['ambientSoundsEnabled'] as bool? ?? ambientSoundsEnabled;
+      hapticsEnabled = data['hapticsEnabled'] as bool? ?? hapticsEnabled;
+      reminderEnabled = data['reminderEnabled'] as bool? ?? reminderEnabled;
+      dailyTargetMinutes =
+          (data['dailyTargetMinutes'] as num?)?.toInt() ?? dailyTargetMinutes;
+      selectedFocusTarget =
+          (data['selectedFocusTarget'] as num?)?.toInt() ?? selectedFocusTarget;
+      totalFocusMinutes =
+          (data['totalFocusMinutes'] as num?)?.toInt() ?? totalFocusMinutes;
+      bestSessionSeconds =
+          (data['bestSessionSeconds'] as num?)?.toInt() ?? bestSessionSeconds;
+      bits = (data['bits'] as num?)?.toInt() ?? bits;
+      totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
+      pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
+      themeMode = _themeModeFromName(data['themeMode'] as String?);
+      lastPulledCharacter = findCharacterById(
+        data['lastPulledCharacterId'] as String? ?? '',
+      );
+      notifyListeners();
+    } finally {
+      _isHydratingProgress = false;
+    }
+  }
+
+  Future<void> _persistProgress({bool force = false}) async {
+    if (_isHydratingProgress && !force) {
+      return;
+    }
+    if (!firebaseEnabled || playerId == null) {
+      return;
+    }
+    await FirebaseFirestore.instance.collection('users').doc(playerId).set({
+      'collection': _collection,
+      'difficulty': difficulty.name,
+      'soundEnabled': soundEnabled,
+      'ambientSoundsEnabled': ambientSoundsEnabled,
+      'hapticsEnabled': hapticsEnabled,
+      'reminderEnabled': reminderEnabled,
+      'dailyTargetMinutes': dailyTargetMinutes,
+      'selectedFocusTarget': selectedFocusTarget,
+      'totalFocusMinutes': totalFocusMinutes,
+      'bestSessionSeconds': bestSessionSeconds,
+      'bits': bits,
+      'totalPulls': totalPulls,
+      'pityCounter': pityCounter,
+      'themeMode': themeMode.name,
+      'lastPulledCharacterId': lastPulledCharacter?.id,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  void _resetProgress() {
+    _collection.clear();
+    difficulty = AppDifficulty.highSchool;
+    soundEnabled = true;
+    ambientSoundsEnabled = true;
+    hapticsEnabled = true;
+    reminderEnabled = true;
+    dailyTargetMinutes = 90;
+    selectedFocusTarget = 25;
+    isFocusActive = false;
+    isFocusPaused = false;
+    currentSessionSeconds = 0;
+    totalFocusMinutes = 0;
+    bestSessionSeconds = 0;
+    bits = 120;
+    totalPulls = 0;
+    pityCounter = 0;
+    lastFocusResult = null;
+    lastPulledCharacter = null;
+    themeMode = ThemeMode.light;
+  }
+
+  AppDifficulty _difficultyFromName(String? value) {
+    return AppDifficulty.values.firstWhere(
+      (AppDifficulty difficulty) => difficulty.name == value,
+      orElse: () => AppDifficulty.highSchool,
+    );
+  }
+
+  ThemeMode _themeModeFromName(String? value) {
+    return ThemeMode.values.firstWhere(
+      (ThemeMode mode) => mode.name == value,
+      orElse: () => ThemeMode.light,
+    );
   }
 
   CharacterRarity _rollRarity({required bool guaranteedLegendary}) {

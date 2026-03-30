@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
 
 class CutsceneScreen extends StatefulWidget {
   const CutsceneScreen({super.key, required this.appState});
@@ -54,8 +55,9 @@ class _CutsceneScreenState extends State<CutsceneScreen>
     }
 
     return Scaffold(
-      body: ColoredBox(
-        color: const Color(0xFF1B2845),
+      body: RarityBackdrop(
+        rarity: character.rarity,
+        accent: character.accent,
         child: SafeArea(
           child: Center(
             child: Padding(

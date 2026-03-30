@@ -56,6 +56,7 @@ class _HomeShellState extends State<HomeShell> {
             onStartFocus: () => setState(() => _selectedIndex = 2),
             onOpenGacha: () => setState(() => _selectedIndex = 0),
             onOpenCollection: () => Navigator.pushNamed(context, '/characters'),
+            onOpenSettings: () => Navigator.pushNamed(context, '/settings'),
           ),
           FocusScreen(appState: widget.appState),
         ];
@@ -146,12 +147,6 @@ class _HomeShellState extends State<HomeShell> {
           tooltip: 'Collection',
           onPressed: () => Navigator.pushNamed(context, '/characters'),
           icon: const Icon(Icons.groups_rounded),
-        ),
-      if (_selectedIndex == 1)
-        IconButton(
-          tooltip: 'Settings',
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
-          icon: const Icon(Icons.tune_rounded),
         ),
       const SizedBox(width: 8),
     ];
