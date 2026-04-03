@@ -56,6 +56,8 @@ class GameCharacter {
     required this.rarity,
     required this.description,
     required this.accent,
+    this.portraitAsset = 'assets/overview.png',
+    this.mainAsset = 'assets/fullview.png',
   });
 
   final String id;
@@ -64,6 +66,8 @@ class GameCharacter {
   final CharacterRarity rarity;
   final String description;
   final Color accent;
+  final String portraitAsset;
+  final String mainAsset;
 }
 
 class FocusSessionResult {

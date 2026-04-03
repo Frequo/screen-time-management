@@ -99,34 +99,34 @@ class GachaScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Featured legendary set',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    for (final GameCharacter character
-                        in appState
-                            .charactersByRarity(CharacterRarity.legendary)
-                            .take(3))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _CharacterPreviewTile(
-                          character: character,
-                          copies: appState.copiesOwned(character),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            // Card(
+            //   child: Padding(
+            //     padding: const EdgeInsets.all(20),
+            //     child: Column(
+            //       crossAxisAlignment: CrossAxisAlignment.start,
+            //       children: <Widget>[
+            //         Text(
+            //           'Featured legendary set',
+            //           style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            //             fontWeight: FontWeight.w700,
+            //           ),
+            //         ),
+            //         const SizedBox(height: 12),
+            //         for (final GameCharacter character
+            //             in appState
+            //                 .charactersByRarity(CharacterRarity.legendary)
+            //                 .take(3))
+            //           Padding(
+            //             padding: const EdgeInsets.only(bottom: 12),
+            //             child: _CharacterPreviewTile(
+            //               character: character,
+            //               copies: appState.copiesOwned(character),
+            //             ),
+            //           ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             if (appState.lastPulledCharacter != null) ...<Widget>[
               const SizedBox(height: 16),
               Card(
@@ -236,7 +236,12 @@ class _CharacterPreviewTile extends StatelessWidget {
               shape: BoxShape.circle,
               color: character.accent,
             ),
-            child: Icon(_rarityIcon(character.rarity), color: Colors.white),
+            child: ClipOval(
+              child: Image.asset(
+                character.portraitAsset,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(

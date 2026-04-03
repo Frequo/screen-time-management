@@ -138,10 +138,11 @@ class _RevealCard extends StatelessWidget {
               shape: BoxShape.circle,
               color: character.accent,
             ),
-            child: Icon(
-              _rarityIcon(character.rarity),
-              size: 80,
-              color: Colors.white,
+            child: ClipOval(
+              child: Image.asset(
+                character.portraitAsset,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(height: 20),

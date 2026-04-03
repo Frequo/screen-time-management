@@ -19,6 +19,24 @@ class InventoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color activeTileColor = isDark
+        ? const Color(0xFF22353B)
+        : const Color(0xFFE7F3EF);
+    final Color activeCollegeTileColor = isDark
+        ? const Color(0xFF243241)
+        : const Color(0xFFE2EDF6);
+    final Color inactiveTileColor = isDark
+        ? const Color(0xFF1B2730)
+        : const Color(0xFFF4F8F6);
+    final Color tileTextColor = isDark
+        ? const Color(0xFFF2F7F6)
+        : const Color(0xFF182127);
+    final Color tileSubtextColor = isDark
+        ? const Color(0xFFB8CAC8)
+        : const Color(0xFF5B696B);
+
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -57,12 +75,14 @@ class InventoryScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(22),
                               color: option == appState.difficulty
                                   ? option == AppDifficulty.college
-                                        ? const Color(0xFFE2EDF6)
-                                        : const Color(0xFFE7F3EF)
-                                  : const Color(0xFFF4F8F6),
+                                        ? activeCollegeTileColor
+                                        : activeTileColor
+                                  : inactiveTileColor,
                               border: Border.all(
                                 color: option == appState.difficulty
-                                    ? Theme.of(context).colorScheme.primary
+                                    ? theme.colorScheme.primary
+                                    : isDark
+                                    ? const Color(0xFF223038)
                                     : Colors.transparent,
                                 width: 1.5,
                               ),
@@ -76,15 +96,18 @@ class InventoryScreen extends StatelessWidget {
                                     children: <Widget>[
                                       Text(
                                         option.label,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
+                                        style: theme.textTheme.titleMedium
                                             ?.copyWith(
+                                              color: tileTextColor,
                                               fontWeight: FontWeight.w700,
                                             ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(option.subtitle),
+                                      Text(
+                                        option.subtitle,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(color: tileSubtextColor),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -94,15 +117,21 @@ class InventoryScreen extends StatelessWidget {
                                   children: <Widget>[
                                     Text(
                                       '${option.rewardPerMinute}/min',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
+                                      style: theme.textTheme.titleMedium
                                           ?.copyWith(
+                                            color: tileTextColor,
                                             fontWeight: FontWeight.w800,
                                           ),
                                     ),
                                     if (option == appState.difficulty)
-                                      const Text('Active'),
+                                      Text(
+                                        'Active',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: tileSubtextColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
                                   ],
                                 ),
                               ],

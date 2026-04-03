@@ -61,13 +61,14 @@ class _HomeShellState extends State<HomeShell> {
           FocusScreen(appState: widget.appState),
         ];
 
-        final List<String> titles = <String>['Gacha', 'Backpack', 'Focus'];
+        final List<String> titles = <String>['Gacha', 'Inventory', 'Focus'];
 
         return Scaffold(
           extendBody: !immersiveFocus,
           appBar: immersiveFocus
               ? null
               : AppBar(
+                automaticallyImplyLeading: false,
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -85,7 +86,7 @@ class _HomeShellState extends State<HomeShell> {
           body: Container(
             color: immersiveFocus
                 ? const Color(0xFF121826)
-                : const Color(0xFFF0F4F2),
+                : Theme.of(context).scaffoldBackgroundColor,
             child: SafeArea(
               top: !immersiveFocus,
               bottom: !immersiveFocus,
@@ -98,7 +99,7 @@ class _HomeShellState extends State<HomeShell> {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: NavigationBar(
                     selectedIndex: _selectedIndex,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).cardColor,
                     onDestinationSelected: (int value) {
                       setState(() {
                         _selectedIndex = value;

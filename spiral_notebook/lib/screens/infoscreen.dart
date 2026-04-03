@@ -56,7 +56,7 @@ class _InfoScreenState extends State<InfoScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('How it works')),
       body: ColoredBox(
-        color: const Color(0xFFF0F4F2),
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: SafeArea(
           top: false,
           child: Padding(
@@ -77,7 +77,7 @@ class _InfoScreenState extends State<InfoScreen> {
                       return Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(32),
                         ),
                         child: Column(

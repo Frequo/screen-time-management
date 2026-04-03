@@ -15,7 +15,7 @@ class CharacterCollectionScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(title: const Text('Character View')),
           body: ColoredBox(
-            color: const Color(0xFFF0F4F2),
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: GridView.builder(
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -40,7 +40,11 @@ class CharacterCollectionScreen extends StatelessWidget {
                   child: Ink(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      color: owned ? Colors.white : const Color(0xFFF0ECE4),
+                      color: owned
+                          ? Theme.of(context).cardColor
+                          : Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF1B242B)
+                          : const Color(0xFFF0ECE4),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -58,13 +62,25 @@ class CharacterCollectionScreen extends StatelessWidget {
                                       ? character.accent
                                       : const Color(0xFFD3D0C9),
                                 ),
-                                child: Icon(
-                                  owned
-                                      ? _rarityIcon(character.rarity)
-                                      : Icons.lock_rounded,
-                                  size: 48,
-                                  color: Colors.white,
-                                ),
+                                // child: Icon(
+                                //   owned
+                                //       ? _rarityIcon(character.rarity)
+                                //       : Icons.lock_rounded,
+                                //   size: 48,
+                                //   color: Colors.white,
+                                // ),
+                                child: owned
+                                    ? ClipOval(
+                                        child: Image.asset(
+                                          character.portraitAsset,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.lock_rounded,
+                                        size: 48,
+                                        color: Colors.white,
+                                      ),
                               ),
                             ),
                           ),
@@ -126,7 +142,9 @@ class CharacterDetailScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.94),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xEE17222A)
+                    : Colors.white.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(32),
               ),
               child: Column(
@@ -134,8 +152,8 @@ class CharacterDetailScreen extends StatelessWidget {
                 children: <Widget>[
                   Center(
                     child: Container(
-                      height: 180,
-                      width: 180,
+                      height: MediaQuery.of(context).size.width * 1.00,
+                      width: MediaQuery.of(context).size.width * 1.00,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: character.accent,
@@ -147,10 +165,9 @@ class CharacterDetailScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        _rarityIcon(character.rarity),
-                        color: Colors.white,
-                        size: 80,
+                      child: Image.asset(
+                        character.mainAsset,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -207,7 +224,9 @@ class _DetailPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4EFE8),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E2A32)
+            : const Color(0xFFF4EFE8),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text('$label: $value'),
