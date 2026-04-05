@@ -43,6 +43,8 @@ Route<dynamic> onGenerateAppRoute(
       );
     case '/cutscene':
       return _buildRoute(CutsceneScreen(appState: appState));
+    case '/pull-results':
+      return _buildRoute(PullResultsScreen(appState: appState));
     default:
       return _buildRoute(const _MissingRouteScreen(message: 'Page not found'));
   }

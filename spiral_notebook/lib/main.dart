@@ -3,11 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/firebase_options.dart';
 import 'package:spiral_notebook/routes.dart';
+import 'package:spiral_notebook/services/focus_ambient_audio.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final bool firebaseEnabled = await _initializeFirebase();
   runApp(MyApp(appState: SpiralAppState(firebaseEnabled: firebaseEnabled)));
+}
+
+class _NoStretchScrollBehavior extends MaterialScrollBehavior {
+  const _NoStretchScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
 }
 
 Future<bool> _initializeFirebase() async {
@@ -33,15 +47,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final FocusAmbientAudioController _focusAmbientAudioController;
+
   @override
   void initState() {
     super.initState();
+    _focusAmbientAudioController = FocusAmbientAudioController(
+      appState: widget.appState,
+    );
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    _focusAmbientAudioController.dispose();
     widget.appState.dispose();
     super.dispose();
   }
@@ -54,6 +74,7 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nexi: Study Gacha',
+          scrollBehavior: const _NoStretchScrollBehavior(),
           themeMode: widget.appState.themeMode,
           theme: ThemeData(
             useMaterial3: true,

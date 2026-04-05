@@ -107,9 +107,9 @@ class SettingsScreen extends StatelessWidget {
                   child: SwitchListTile(
                     value: appState.soundEnabled,
                     onChanged: appState.setSoundEnabled,
-                    title: const Text('Sound effects'),
+                    title: const Text('App audio'),
                     subtitle: const Text(
-                      'Play banner and session feedback sounds.',
+                      'Turn this off to mute all app sound, including focus ambience.',
                     ),
                   ),
                 ),
@@ -120,7 +120,7 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: appState.setAmbientSoundsEnabled,
                     title: const Text('Ambient focus audio'),
                     subtitle: const Text(
-                      'Play the focus screen ambient sound layer.',
+                      'Only plays during an active focus session and pauses with the timer.',
                     ),
                   ),
                 ),

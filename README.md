@@ -68,3 +68,5 @@ Art Style:
 
 42 Characters:
 - chibi people, modern city
+
+TODO: in the character view, there should be an info button in the top right corner that when press shows the artist credits and other metadata.

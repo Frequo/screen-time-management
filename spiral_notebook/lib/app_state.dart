@@ -133,6 +133,7 @@ class SpiralAppState extends ChangeNotifier {
   int pityCounter = 0;
   FocusSessionResult? lastFocusResult;
   GameCharacter? lastPulledCharacter;
+  List<GameCharacter> lastPulledCharacters = <GameCharacter>[];
 
   Map<String, int> get collection => Map<String, int>.unmodifiable(_collection);
 
@@ -366,10 +367,31 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   GameCharacter? pullCharacter() {
-    if (bits < pullCost) {
+    final List<GameCharacter>? results = pullCharacters(1);
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return results.first;
+  }
+
+  List<GameCharacter>? pullCharacters(int count) {
+    if (count <= 0 || bits < pullCost * count) {
       return null;
     }
 
+    final List<GameCharacter> results = <GameCharacter>[];
+    for (int index = 0; index < count; index += 1) {
+      results.add(_performPull());
+    }
+
+    lastPulledCharacter = results.last;
+    lastPulledCharacters = List<GameCharacter>.unmodifiable(results);
+    notifyListeners();
+    _persistProgress();
+    return results;
+  }
+
+  GameCharacter _performPull() {
     bits -= pullCost;
     totalPulls += 1;
     pityCounter += 1;
@@ -390,14 +412,11 @@ class SpiralAppState extends ChangeNotifier {
     final GameCharacter pulled = pool[_random.nextInt(pool.length)];
 
     _collection.update(pulled.id, (int value) => value + 1, ifAbsent: () => 1);
-    lastPulledCharacter = pulled;
 
     if (pulled.rarity == CharacterRarity.legendary || guaranteedLegendary) {
       pityCounter = 0;
     }
 
-    notifyListeners();
-    _persistProgress();
     return pulled;
   }
 
@@ -607,6 +626,7 @@ class SpiralAppState extends ChangeNotifier {
     pityCounter = 0;
     lastFocusResult = null;
     lastPulledCharacter = null;
+    lastPulledCharacters = <GameCharacter>[];
     themeMode = ThemeMode.light;
   }
 
@@ -662,7 +682,7 @@ class SpiralAppState extends ChangeNotifier {
 const List<GameCharacter> _characterRoster = <GameCharacter>[
   GameCharacter(
     id: 'mina-sidewalk-sketcher',
-    name: 'Mina',
+    name: 'Minato Vale',
     title: 'Sidewalk Sketcher',
     rarity: CharacterRarity.common,
     description:
@@ -671,7 +691,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'theo-trainstop-coder',
-    name: 'Theo',
+    name: 'Theo Quill',
     title: 'Trainstop Coder',
     rarity: CharacterRarity.common,
     description:
@@ -680,7 +700,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'june-courier',
-    name: 'June',
+    name: 'Juniper Rush',
     title: 'Bubble Tea Courier',
     rarity: CharacterRarity.common,
     description:
@@ -689,7 +709,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'nico-corner-drummer',
-    name: 'Nico',
+    name: 'Nico Static',
     title: 'Corner Drummer',
     rarity: CharacterRarity.common,
     description:
@@ -698,7 +718,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'yara-bookshop-scout',
-    name: 'Yara',
+    name: 'Yara Finch',
     title: 'Bookshop Scout',
     rarity: CharacterRarity.common,
     description:
@@ -707,7 +727,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'eli-park-runner',
-    name: 'Eli',
+    name: 'Eli Mercer',
     title: 'Park Runner',
     rarity: CharacterRarity.common,
     description:
@@ -716,7 +736,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'sora-night-vendor',
-    name: 'Sora',
+    name: 'Sora Ember',
     title: 'Night Market Vendor',
     rarity: CharacterRarity.common,
     description:
@@ -725,7 +745,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'ava-busker-bloom',
-    name: 'Ava',
+    name: 'Ava Lark',
     title: 'Busker Bloom',
     rarity: CharacterRarity.common,
     description:
@@ -734,7 +754,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'leo-crosswalk-captain',
-    name: 'Leo',
+    name: 'Leo Voss',
     title: 'Crosswalk Captain',
     rarity: CharacterRarity.common,
     description:
@@ -743,7 +763,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'hana-rooftop-gardener',
-    name: 'Hana',
+    name: 'Hana Reed',
     title: 'Rooftop Gardener',
     rarity: CharacterRarity.common,
     description:
@@ -752,7 +772,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'owen-cafe-lead',
-    name: 'Owen',
+    name: 'Owen Slate',
     title: 'Cafe Shift Lead',
     rarity: CharacterRarity.common,
     description:
@@ -761,7 +781,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'mira-library-navigator',
-    name: 'Mira',
+    name: 'Mira Sol',
     title: 'Library Navigator',
     rarity: CharacterRarity.common,
     description:
@@ -770,7 +790,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'ben-skate-loop',
-    name: 'Ben',
+    name: 'Bennett Loop',
     title: 'Skate Loop Kid',
     rarity: CharacterRarity.common,
     description:
@@ -779,7 +799,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'zoe-raincoat-dreamer',
-    name: 'Zoe',
+    name: 'Zoe Nightjar',
     title: 'Raincoat Dreamer',
     rarity: CharacterRarity.common,
     description:
@@ -788,7 +808,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'ian-repair-club-ace',
-    name: 'Ian',
+    name: 'Ian Calder',
     title: 'Repair Club Ace',
     rarity: CharacterRarity.common,
     description:
@@ -797,7 +817,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'lila-lantern-walker',
-    name: 'Lila',
+    name: 'Lila Wren',
     title: 'Lantern Walker',
     rarity: CharacterRarity.common,
     description:
@@ -806,7 +826,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'celine-neon-barista',
-    name: 'Celine',
+    name: 'Celine Lux',
     title: 'Neon Barista',
     rarity: CharacterRarity.rare,
     description:
@@ -815,7 +835,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'felix-metro-dj',
-    name: 'Felix',
+    name: 'Felix Echo',
     title: 'Metro DJ',
     rarity: CharacterRarity.rare,
     description:
@@ -824,7 +844,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'priya-studio-sprinter',
-    name: 'Priya',
+    name: 'Priya Vale',
     title: 'Studio Sprinter',
     rarity: CharacterRarity.rare,
     description:
@@ -833,7 +853,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'mateo-arcade-tactician',
-    name: 'Mateo',
+    name: 'Mateo Grid',
     title: 'Arcade Tactician',
     rarity: CharacterRarity.rare,
     description:
@@ -842,7 +862,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'iris-signal-hacker',
-    name: 'Iris',
+    name: 'Iris Kade',
     title: 'Signal Hacker',
     rarity: CharacterRarity.rare,
     description:
@@ -851,7 +871,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'ruby-sticker-poet',
-    name: 'Ruby',
+    name: 'Ruby Verse',
     title: 'Sticker Poet',
     rarity: CharacterRarity.rare,
     description:
@@ -860,7 +880,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'damon-bike-messenger',
-    name: 'Damon',
+    name: 'Damon Swift',
     title: 'Bike Messenger',
     rarity: CharacterRarity.rare,
     description:
@@ -869,7 +889,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'harper-street-stylist',
-    name: 'Harper',
+    name: 'Harper Rue',
     title: 'Street Stylist',
     rarity: CharacterRarity.rare,
     description:
@@ -878,7 +898,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'kira-window-painter',
-    name: 'Kira',
+    name: 'Kira Bloom',
     title: 'Window Painter',
     rarity: CharacterRarity.rare,
     description:
@@ -887,7 +907,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'adrian-courtyard-coach',
-    name: 'Adrian',
+    name: 'Adrian Pike',
     title: 'Courtyard Coach',
     rarity: CharacterRarity.rare,
     description:
@@ -896,7 +916,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'nia-newsstand-sage',
-    name: 'Nia',
+    name: 'Nia Marlowe',
     title: 'Newsstand Sage',
     rarity: CharacterRarity.rare,
     description:
@@ -905,7 +925,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'rowan-tram-guardian',
-    name: 'Rowan',
+    name: 'Rowan Drift',
     title: 'Tram Guardian',
     rarity: CharacterRarity.rare,
     description:
@@ -914,7 +934,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'selene-skyline-architect',
-    name: 'Selene',
+    name: 'Selene Arclight',
     title: 'Skyline Architect',
     rarity: CharacterRarity.epic,
     description:
@@ -923,7 +943,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'jasper-midnight-chef',
-    name: 'Jasper',
+    name: 'Jasper Noctis',
     title: 'Midnight Chef',
     rarity: CharacterRarity.epic,
     description:
@@ -932,7 +952,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'talia-festival-director',
-    name: 'Talia',
+    name: 'Talia Sunmark',
     title: 'Festival Director',
     rarity: CharacterRarity.epic,
     description:
@@ -941,7 +961,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'quinn-clocktower-engineer',
-    name: 'Quinn',
+    name: 'Quinn Brass',
     title: 'Clocktower Engineer',
     rarity: CharacterRarity.epic,
     description:
@@ -950,7 +970,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'ayla-graffiti-virtuoso',
-    name: 'Ayla',
+    name: 'Ayla Chrom',
     title: 'Graffiti Virtuoso',
     rarity: CharacterRarity.epic,
     description:
@@ -959,7 +979,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'cass-solar-botanist',
-    name: 'Cass',
+    name: 'Cass Aureline',
     title: 'Solar Botanist',
     rarity: CharacterRarity.epic,
     description:
@@ -968,7 +988,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'victor-rain-district-marshal',
-    name: 'Victor',
+    name: 'Victor Stroud',
     title: 'Rain District Marshal',
     rarity: CharacterRarity.epic,
     description:
@@ -977,7 +997,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'naomi-storyline-producer',
-    name: 'Naomi',
+    name: 'Naomi Reeve',
     title: 'Storyline Producer',
     rarity: CharacterRarity.epic,
     description:
@@ -986,7 +1006,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'orion-sandglass-regent',
-    name: 'Orion',
+    name: 'Orion Halcyon',
     title: 'Sandglass Regent',
     rarity: CharacterRarity.legendary,
     description:
@@ -995,7 +1015,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'freya-citylight-oracle',
-    name: 'Freya',
+    name: 'Freya Lumen',
     title: 'Citylight Oracle',
     rarity: CharacterRarity.legendary,
     description:
@@ -1004,7 +1024,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'atlas-dawnline-captain',
-    name: 'Atlas',
+    name: 'Atlas Meridian',
     title: 'Dawnline Captain',
     rarity: CharacterRarity.legendary,
     description:
@@ -1013,7 +1033,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'vega-celestial-courier',
-    name: 'Vega',
+    name: 'Vega Starling',
     title: 'Celestial Courier',
     rarity: CharacterRarity.legendary,
     description:
@@ -1022,7 +1042,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'lyra-prism-conductor',
-    name: 'Lyra',
+    name: 'Lyra Prism',
     title: 'Prism Conductor',
     rarity: CharacterRarity.legendary,
     description:
@@ -1031,7 +1051,7 @@ const List<GameCharacter> _characterRoster = <GameCharacter>[
   ),
   GameCharacter(
     id: 'solstice-last-bell',
-    name: 'Solstice',
+    name: 'Solstice Vale',
     title: 'The Last Bell',
     rarity: CharacterRarity.legendary,
     description:

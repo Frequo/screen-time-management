@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/screens/cutscenescreen.dart';
 
 class GachaScreen extends StatelessWidget {
   const GachaScreen({super.key, required this.appState});
@@ -62,9 +63,17 @@ class GachaScreen extends StatelessWidget {
                     children: <Widget>[
                       Expanded(
                         child: FilledButton.icon(
-                          onPressed: () => _handlePull(context),
+                          onPressed: () => _handlePull(context, 1),
                           icon: const Icon(Icons.auto_awesome),
-                          label: const Text('Pull once'),
+                          label: const Text('Draw 1'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: () => _handlePull(context, 10),
+                          icon: const Icon(Icons.bolt_rounded),
+                          label: const Text('Draw 10'),
                         ),
                       ),
                     ],
@@ -159,20 +168,30 @@ class GachaScreen extends StatelessWidget {
     );
   }
 
-  void _handlePull(BuildContext context) {
-    final GameCharacter? result = appState.pullCharacter();
-    if (result == null) {
+  void _handlePull(BuildContext context, int count) {
+    final List<GameCharacter>? results = appState.pullCharacters(count);
+    if (results == null || results.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Not enough bits yet. Finish another focus session first.',
+            count == 10
+                ? 'You need ${SpiralAppState.pullCost * 10} bits for a 10-pull.'
+                : 'Not enough bits yet. Finish another focus session first.',
           ),
         ),
       );
       return;
     }
 
-    Navigator.pushNamed(context, '/cutscene');
+    Navigator.pushNamed(
+      context,
+      '/cutscene',
+      arguments: CutsceneArgs(
+        characters: results,
+        currentIndex: 0,
+        allowSkip: count > 1,
+      ),
+    );
   }
 }
 
@@ -237,10 +256,7 @@ class _CharacterPreviewTile extends StatelessWidget {
               color: character.accent,
             ),
             child: ClipOval(
-              child: Image.asset(
-                character.portraitAsset,
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset(character.portraitAsset, fit: BoxFit.cover),
             ),
           ),
           const SizedBox(width: 14),
