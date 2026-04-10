@@ -55,7 +55,6 @@ class _HomeShellState extends State<HomeShell> {
             appState: widget.appState,
             onStartFocus: () => setState(() => _selectedIndex = 2),
             onOpenGacha: () => setState(() => _selectedIndex = 0),
-            onOpenCollection: () => Navigator.pushNamed(context, '/characters'),
             onOpenSettings: () => Navigator.pushNamed(context, '/settings'),
           ),
           FocusScreen(appState: widget.appState),
@@ -68,7 +67,7 @@ class _HomeShellState extends State<HomeShell> {
           appBar: immersiveFocus
               ? null
               : AppBar(
-                automaticallyImplyLeading: false,
+                  automaticallyImplyLeading: false,
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -143,12 +142,6 @@ class _HomeShellState extends State<HomeShell> {
         onPressed: () => Navigator.pushNamed(context, '/info'),
         icon: const Icon(Icons.slideshow_rounded),
       ),
-      if (_selectedIndex != 2)
-        IconButton(
-          tooltip: 'Collection',
-          onPressed: () => Navigator.pushNamed(context, '/characters'),
-          icon: const Icon(Icons.groups_rounded),
-        ),
       const SizedBox(width: 8),
     ];
   }

@@ -70,3 +70,11 @@ Art Style:
 - chibi people, modern city
 
 TODO: in the character view, there should be an info button in the top right corner that when press shows the artist credits and other metadata.
+
+
+
+
+Checklist:
+- Add the difficulty setting card into the onboarding screen
+- Character view should be embedded into the inventory screen instead of being a separate screen, and the user can click on each character to view the details
+- 

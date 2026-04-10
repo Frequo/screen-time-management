@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
 
@@ -86,6 +88,8 @@ class FocusSessionResult {
 
 class SpiralAppState extends ChangeNotifier {
   SpiralAppState({this.firebaseEnabled = false}) {
+    unawaited(_hydrateLocalCache());
+
     if (!firebaseEnabled) {
       return;
     }
@@ -101,6 +105,11 @@ class SpiralAppState extends ChangeNotifier {
   static const int pullCost = 100;
   static const int pityLimit = 200;
   static const List<int> focusTargets = <int>[10, 25, 45, 60];
+  static const String _sessionEmailKey = 'session.email';
+  static const String _sessionNameKey = 'session.name';
+  static const String _sessionUserIdKey = 'session.userId';
+  static const String _progressCacheKey = 'progress.cache';
+  static const String _sessionEnabledKey = 'session.enabled';
 
   final Random _random = Random();
   final List<GameCharacter> roster = _characterRoster;
@@ -179,40 +188,57 @@ class SpiralAppState extends ChangeNotifier {
 
     if (!firebaseEnabled) {
       _applyLocalLogin(normalizedName, trimmedEmail);
+      await _persistLocalCache();
       return;
     }
 
-    final UserCredential credential = createAccount
-        ? await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: trimmedEmail,
-            password: password,
-          )
-        : await FirebaseAuth.instance.signInWithEmailAndPassword(
-            email: trimmedEmail,
-            password: password,
-          );
+    try {
+      final UserCredential credential = createAccount
+          ? await FirebaseAuth.instance.createUserWithEmailAndPassword(
+              email: trimmedEmail,
+              password: password,
+            )
+          : await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: trimmedEmail,
+              password: password,
+            );
 
-    User user = credential.user!;
-    final String resolvedName = _normalizedName(
-      displayName: user.displayName ?? normalizedName,
-      email: trimmedEmail,
-    );
+      User user = credential.user!;
+      final String resolvedName = _normalizedName(
+        displayName: user.displayName ?? normalizedName,
+        email: trimmedEmail,
+      );
 
-    if (user.displayName != resolvedName) {
-      await user.updateDisplayName(resolvedName);
+      if (user.displayName != resolvedName) {
+        await user.updateDisplayName(resolvedName);
+      }
+      await user.reload();
+      user = FirebaseAuth.instance.currentUser ?? user;
+
+      _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
+      await _persistLocalCache();
+      await _syncProfileToFirebase(
+        user: user,
+        resolvedName: resolvedName,
+        email: trimmedEmail,
+      );
+      await _loadProgressFromFirebase();
+      return;
+    } on FirebaseAuthException catch (error) {
+      if (await _canRecoverFromNetworkSignInFailure(
+        error,
+        email: trimmedEmail,
+      )) {
+        _applyLocalLogin(
+          await _cachedNameForEmail(trimmedEmail) ?? normalizedName,
+          trimmedEmail,
+        );
+        await _persistLocalCache();
+        await _hydrateProgressFromLocalCache();
+        return;
+      }
+      rethrow;
     }
-    await user.reload();
-    user = FirebaseAuth.instance.currentUser ?? user;
-
-    await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-      'displayName': resolvedName,
-      'email': trimmedEmail,
-      'provider': 'password',
-      'lastLoginAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-
-    _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
-    await _loadProgressFromFirebase();
   }
 
   Future<void> logout() async {
@@ -222,10 +248,12 @@ class SpiralAppState extends ChangeNotifier {
     currentSessionSeconds = 0;
 
     if (firebaseEnabled && FirebaseAuth.instance.currentUser != null) {
+      await _clearLocalCache();
       await FirebaseAuth.instance.signOut();
       return;
     }
 
+    await _clearLocalCache();
     _clearSession();
     notifyListeners();
   }
@@ -461,7 +489,6 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   void _applyLocalLogin(String name, String email) {
-    _resetProgress();
     playerName = name;
     playerEmail = email;
     playerId = null;
@@ -522,6 +549,7 @@ class SpiralAppState extends ChangeNotifier {
     if (user == null) {
       return;
     }
+    await _persistLocalCache();
     await _loadProgressFromFirebase();
   }
 
@@ -574,13 +602,17 @@ class SpiralAppState extends ChangeNotifier {
       lastPulledCharacter = findCharacterById(
         data['lastPulledCharacterId'] as String? ?? '',
       );
+      await _persistLocalCache();
       notifyListeners();
+    } on FirebaseException {
+      await _hydrateProgressFromLocalCache();
     } finally {
       _isHydratingProgress = false;
     }
   }
 
   Future<void> _persistProgress({bool force = false}) async {
+    await _persistLocalCache();
     if (_isHydratingProgress && !force) {
       return;
     }
@@ -605,6 +637,164 @@ class SpiralAppState extends ChangeNotifier {
       'lastPulledCharacterId': lastPulledCharacter?.id,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  Future<void> _hydrateLocalCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool hasSession = prefs.getBool(_sessionEnabledKey) ?? false;
+
+    if (hasSession && !isLoggedIn) {
+      playerName = prefs.getString(_sessionNameKey) ?? '';
+      playerEmail = prefs.getString(_sessionEmailKey) ?? '';
+      playerId = prefs.getString(_sessionUserIdKey);
+      isLoggedIn = playerEmail.isNotEmpty;
+      await _hydrateProgressFromLocalCache(preferences: prefs);
+      notifyListeners();
+    }
+  }
+
+  Future<void> _hydrateProgressFromLocalCache({
+    SharedPreferences? preferences,
+  }) async {
+    final SharedPreferences prefs =
+        preferences ?? await SharedPreferences.getInstance();
+    final String? raw = prefs.getString(_progressCacheKey);
+    if (raw == null || raw.isEmpty) {
+      return;
+    }
+
+    final Map<String, dynamic> data = jsonDecode(raw) as Map<String, dynamic>;
+    final Map<String, dynamic> collectionData =
+        (data['collection'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+    _collection
+      ..clear()
+      ..addEntries(
+        collectionData.entries.map(
+          (MapEntry<String, dynamic> entry) => MapEntry<String, int>(
+            entry.key,
+            (entry.value as num?)?.toInt() ?? 0,
+          ),
+        ),
+      );
+    difficulty = _difficultyFromName(data['difficulty'] as String?);
+    soundEnabled = data['soundEnabled'] as bool? ?? soundEnabled;
+    ambientSoundsEnabled =
+        data['ambientSoundsEnabled'] as bool? ?? ambientSoundsEnabled;
+    hapticsEnabled = data['hapticsEnabled'] as bool? ?? hapticsEnabled;
+    reminderEnabled = data['reminderEnabled'] as bool? ?? reminderEnabled;
+    dailyTargetMinutes =
+        (data['dailyTargetMinutes'] as num?)?.toInt() ?? dailyTargetMinutes;
+    selectedFocusTarget =
+        (data['selectedFocusTarget'] as num?)?.toInt() ?? selectedFocusTarget;
+    totalFocusMinutes =
+        (data['totalFocusMinutes'] as num?)?.toInt() ?? totalFocusMinutes;
+    bestSessionSeconds =
+        (data['bestSessionSeconds'] as num?)?.toInt() ?? bestSessionSeconds;
+    bits = (data['bits'] as num?)?.toInt() ?? bits;
+    totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
+    pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
+    themeMode = _themeModeFromName(data['themeMode'] as String?);
+    lastPulledCharacter = findCharacterById(
+      data['lastPulledCharacterId'] as String? ?? '',
+    );
+    lastFocusResult = null;
+    lastPulledCharacters = <GameCharacter>[];
+  }
+
+  Future<void> _persistLocalCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_sessionEnabledKey, isLoggedIn);
+
+    if (!isLoggedIn) {
+      await prefs.remove(_sessionEmailKey);
+      await prefs.remove(_sessionNameKey);
+      await prefs.remove(_sessionUserIdKey);
+      await prefs.remove(_progressCacheKey);
+      return;
+    }
+
+    await prefs.setString(_sessionEmailKey, playerEmail);
+    await prefs.setString(_sessionNameKey, playerName);
+    if (playerId != null && playerId!.isNotEmpty) {
+      await prefs.setString(_sessionUserIdKey, playerId!);
+    } else {
+      await prefs.remove(_sessionUserIdKey);
+    }
+    await prefs.setString(_progressCacheKey, jsonEncode(_localProgressData()));
+  }
+
+  Future<void> _clearLocalCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_sessionEnabledKey);
+    await prefs.remove(_sessionEmailKey);
+    await prefs.remove(_sessionNameKey);
+    await prefs.remove(_sessionUserIdKey);
+    await prefs.remove(_progressCacheKey);
+  }
+
+  Map<String, Object?> _localProgressData() {
+    return <String, Object?>{
+      'collection': _collection,
+      'difficulty': difficulty.name,
+      'soundEnabled': soundEnabled,
+      'ambientSoundsEnabled': ambientSoundsEnabled,
+      'hapticsEnabled': hapticsEnabled,
+      'reminderEnabled': reminderEnabled,
+      'dailyTargetMinutes': dailyTargetMinutes,
+      'selectedFocusTarget': selectedFocusTarget,
+      'totalFocusMinutes': totalFocusMinutes,
+      'bestSessionSeconds': bestSessionSeconds,
+      'bits': bits,
+      'totalPulls': totalPulls,
+      'pityCounter': pityCounter,
+      'themeMode': themeMode.name,
+      'lastPulledCharacterId': lastPulledCharacter?.id,
+    };
+  }
+
+  Future<void> _syncProfileToFirebase({
+    required User user,
+    required String resolvedName,
+    required String email,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'displayName': resolvedName,
+        'email': email,
+        'provider': 'password',
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException {
+      // Keep the authenticated session active even if profile sync is offline.
+    }
+  }
+
+  Future<bool> _canRecoverFromNetworkSignInFailure(
+    FirebaseAuthException error, {
+    required String email,
+  }) async {
+    if (error.code != 'network-request-failed') {
+      return false;
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String cachedEmail = (prefs.getString(_sessionEmailKey) ?? '')
+        .trim()
+        .toLowerCase();
+    return cachedEmail.isNotEmpty && cachedEmail == email.trim().toLowerCase();
+  }
+
+  Future<String?> _cachedNameForEmail(String email) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String normalizedEmail = email.trim().toLowerCase();
+    final String cachedEmail = (prefs.getString(_sessionEmailKey) ?? '')
+        .trim()
+        .toLowerCase();
+    if (cachedEmail != normalizedEmail) {
+      return null;
+    }
+    final String cachedName = (prefs.getString(_sessionNameKey) ?? '').trim();
+    return cachedName.isEmpty ? null : cachedName;
   }
 
   void _resetProgress() {

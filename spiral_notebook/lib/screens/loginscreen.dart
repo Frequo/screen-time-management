@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.appState});
@@ -240,23 +241,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: const <Widget>[
-                        _FeatureChip(
-                          label: 'Bottom-nav loop: Gacha, Inventory, Focus',
-                        ),
-                        _FeatureChip(
-                          label: '42 colorful city characters to collect',
-                        ),
-                        _FeatureChip(
-                          label: 'Difficulty settings change reward pacing',
-                        ),
-                        _FeatureChip(
-                          label: '200-pull pity guarantees a legendary',
-                        ),
-                      ],
+                    DifficultySelectorCard(
+                      appState: widget.appState,
+                      title: 'Pick your starting difficulty',
+                      description:
+                          'Choose how fast focus minutes turn into bits before you enter the app. You can change this again from Inventory at any time.',
+                      padding: const EdgeInsets.all(18),
                     ),
                   ],
                 ),
@@ -350,7 +340,8 @@ class _LoginScreenState extends State<LoginScreen> {
         'user-not-found' => 'No account matches that email.',
         'wrong-password' => 'The password is incorrect.',
         'weak-password' => 'Choose a stronger password.',
-        'network-request-failed' => 'Network error while contacting Firebase.',
+        'network-request-failed' =>
+          'Network error while contacting Firebase. After one successful sign-in on this device, the app can reopen that same account from the local cache during outages.',
         _ => error.message ?? 'Firebase sign-in failed.',
       };
     }

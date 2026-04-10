@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/screens/characterview.dart';
+import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({
@@ -7,36 +9,16 @@ class InventoryScreen extends StatelessWidget {
     required this.appState,
     required this.onStartFocus,
     required this.onOpenGacha,
-    required this.onOpenCollection,
     required this.onOpenSettings,
   });
 
   final SpiralAppState appState;
   final VoidCallback onStartFocus;
   final VoidCallback onOpenGacha;
-  final VoidCallback onOpenCollection;
   final VoidCallback onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-    final Color activeTileColor = isDark
-        ? const Color(0xFF22353B)
-        : const Color(0xFFE7F3EF);
-    final Color activeCollegeTileColor = isDark
-        ? const Color(0xFF243241)
-        : const Color(0xFFE2EDF6);
-    final Color inactiveTileColor = isDark
-        ? const Color(0xFF1B2730)
-        : const Color(0xFFF4F8F6);
-    final Color tileTextColor = isDark
-        ? const Color(0xFFF2F7F6)
-        : const Color(0xFF182127);
-    final Color tileSubtextColor = isDark
-        ? const Color(0xFFB8CAC8)
-        : const Color(0xFF5B696B);
-
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -45,6 +27,8 @@ class InventoryScreen extends StatelessWidget {
           children: <Widget>[
             _HeroCard(appState: appState),
             const SizedBox(height: 16),
+            DifficultySelectorCard(appState: appState),
+            const SizedBox(height: 16),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -52,93 +36,31 @@ class InventoryScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Difficulty and rewards',
+                      'Character roster',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Choose the workload tier you want this session to represent. Harder tiers slow down your bit gain.',
+                      'Your collection now lives here. Tap any character card to inspect the details.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
-                    for (final AppDifficulty option in AppDifficulty.values)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(22),
-                          onTap: () => appState.setDifficulty(option),
-                          child: Ink(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(22),
-                              color: option == appState.difficulty
-                                  ? option == AppDifficulty.college
-                                        ? activeCollegeTileColor
-                                        : activeTileColor
-                                  : inactiveTileColor,
-                              border: Border.all(
-                                color: option == appState.difficulty
-                                    ? theme.colorScheme.primary
-                                    : isDark
-                                    ? const Color(0xFF223038)
-                                    : Colors.transparent,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        option.label,
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              color: tileTextColor,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        option.subtitle,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(color: tileSubtextColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      '${option.rewardPerMinute}/min',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            color: tileTextColor,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                    if (option == appState.difficulty)
-                                      Text(
-                                        'Active',
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: tileSubtextColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    CharacterRosterGrid(
+                      appState: appState,
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onCharacterTap:
+                          (BuildContext context, GameCharacter character) {
+                            showCharacterDetailSheet(
+                              context,
+                              appState: appState,
+                              character: character,
+                            );
+                          },
+                    ),
                   ],
                 ),
               ),
@@ -188,18 +110,6 @@ class InventoryScreen extends StatelessWidget {
                             onPressed: onOpenSettings,
                             icon: const Icon(Icons.tune_rounded),
                             label: const Text('Open settings'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: onOpenCollection,
-                            icon: const Icon(Icons.groups_rounded),
-                            label: const Text('View character roster'),
                           ),
                         ),
                       ],
@@ -259,48 +169,9 @@ class _HeroCard extends StatelessWidget {
                 label: 'Focused',
                 value: appState.minutesLabel(appState.totalFocusMinutes),
               ),
-              _StatPill(
-                label: 'Best run',
-                value: appState.formatDuration(appState.bestSessionSeconds),
-              ),
             ],
           ),
           const SizedBox(height: 18),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    'Daily target',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    '${appState.dailyProgressMinutes}/${appState.dailyTargetMinutes} min',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  minHeight: 10,
-                  value: appState.dailyProgress.clamp(0, 1),
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFF83E0C1),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
