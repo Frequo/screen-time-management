@@ -25,7 +25,7 @@ class GachaScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'City lights banner',
+                    'Character Banner',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -47,10 +47,6 @@ class GachaScreen extends StatelessWidget {
                       _BannerStat(
                         label: 'Pull cost',
                         value: '${SpiralAppState.pullCost}',
-                      ),
-                      _BannerStat(
-                        label: 'Pity',
-                        value: '${appState.pityRemaining} left',
                       ),
                       _BannerStat(
                         label: 'Collection',
@@ -78,6 +74,8 @@ class GachaScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  _PityBar(appState: appState),
                 ],
               ),
             ),
@@ -96,11 +94,11 @@ class GachaScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Common 67%  |  Rare 22%  |  Epic 9%  |  Legendary 2%',
+                      'Common 68%  |  Rare 22%  |  Epic 9%  |  Legendary 1%',
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Every 200 pulls guarantees a legendary. Missing characters are slightly favored within each rarity pool.',
+                      'Every 100 pulls guarantees a legendary. Missing characters are slightly favored within each rarity pool.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -228,6 +226,64 @@ class _BannerStat extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PityBar extends StatelessWidget {
+  const _PityBar({required this.appState});
+
+  final SpiralAppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text(
+              'Pity left',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${appState.pityRemaining} until guaranteed legendary',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: SizedBox(
+            height: 12,
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                ColoredBox(color: Colors.white24),
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: appState.pityProgress,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: <Color>[Color(0xFFFFD36A), Color(0xFFE4A11B)],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

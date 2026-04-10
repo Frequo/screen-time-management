@@ -71,6 +71,7 @@ class _MyAppState extends State<MyApp> {
     return AnimatedBuilder(
       animation: widget.appState,
       builder: (BuildContext context, Widget? child) {
+        final AppAccentStyle accentStyle = widget.appState.accentStyle;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nexi: Study Gacha',
@@ -79,9 +80,9 @@ class _MyAppState extends State<MyApp> {
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF5DAFA3),
-              primary: const Color(0xFF5DAFA3),
-              secondary: const Color(0xFF7D90C8),
+              seedColor: accentStyle.lightPrimary,
+              primary: accentStyle.lightPrimary,
+              secondary: accentStyle.lightSecondary,
               surface: const Color(0xFFF7FAF8),
             ),
             scaffoldBackgroundColor: const Color(0xFFF0F4F2),
@@ -126,9 +127,9 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
-              seedColor: const Color(0xFF78C3B8),
-              primary: const Color(0xFF78C3B8),
-              secondary: const Color(0xFF9AACE7),
+              seedColor: accentStyle.darkPrimary,
+              primary: accentStyle.darkPrimary,
+              secondary: accentStyle.darkSecondary,
               surface: const Color(0xFF162028),
             ),
             scaffoldBackgroundColor: const Color(0xFF0C141A),

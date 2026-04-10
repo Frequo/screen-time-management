@@ -42,7 +42,7 @@ class CharacterDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool owned = appState.isCollected(character);
     return Scaffold(
-      appBar: AppBar(title: Text(owned ? character.name : 'Unknown resident')),
+      appBar: AppBar(title: Text(owned ? character.name : 'Unknown character')),
       body: CharacterDetailBody(appState: appState, character: character),
     );
   }
@@ -146,7 +146,7 @@ class CharacterDetailBody extends StatelessWidget {
                 Text(
                   owned
                       ? character.title
-                      : 'Keep focusing to reveal this resident.',
+                      : 'Keep focusing to reveal this character.',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: character.rarity.color,
                     fontWeight: FontWeight.w700,
@@ -200,7 +200,7 @@ Future<void> showCharacterDetailSheet(
               title: Text(
                 appState.isCollected(character)
                     ? character.name
-                    : 'Unknown resident',
+                    : 'Unknown character',
               ),
             ),
             body: CharacterDetailBody(appState: appState, character: character),
@@ -275,7 +275,7 @@ class _CharacterGridTile extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                owned ? character.title : 'Tap to preview this resident.',
+                owned ? character.title : 'Tap to preview this character.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

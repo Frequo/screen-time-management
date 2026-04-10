@@ -382,7 +382,7 @@ class PullResultsScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 14,
                   crossAxisSpacing: 14,
-                  childAspectRatio: 0.9,
+                  childAspectRatio: 0.8,
                 ),
                 itemCount: characters.length,
                 itemBuilder: (BuildContext context, int index) {

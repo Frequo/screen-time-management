@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
-import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.appState});
@@ -239,14 +238,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    DifficultySelectorCard(
-                      appState: widget.appState,
-                      title: 'Pick your starting difficulty',
-                      description:
-                          'Choose how fast focus minutes turn into bits before you enter the app. You can change this again from Inventory at any time.',
-                      padding: const EdgeInsets.all(18),
                     ),
                   ],
                 ),

@@ -32,6 +32,46 @@ extension AppDifficultyDetails on AppDifficulty {
   };
 }
 
+enum AppAccentStyle { mint, sunflower, sky, rose }
+
+extension AppAccentStyleDetails on AppAccentStyle {
+  // TODO: turn selection to a color picker
+  String get label => switch (this) {
+    AppAccentStyle.mint => 'Mint',
+    AppAccentStyle.sunflower => 'Yellow',
+    AppAccentStyle.sky => 'Sky',
+    AppAccentStyle.rose => 'Rose',
+  };
+
+  Color get lightPrimary => switch (this) {
+    AppAccentStyle.mint => const Color(0xFF5DAFA3),
+    AppAccentStyle.sunflower => const Color(0xFFC99A10),
+    AppAccentStyle.sky => const Color(0xFF4A90E2),
+    AppAccentStyle.rose => const Color(0xFFD76684),
+  };
+
+  Color get darkPrimary => switch (this) {
+    AppAccentStyle.mint => const Color(0xFF78C3B8),
+    AppAccentStyle.sunflower => const Color(0xFFFFD36A),
+    AppAccentStyle.sky => const Color(0xFF7DB9FF),
+    AppAccentStyle.rose => const Color(0xFFFF97B0),
+  };
+
+  Color get lightSecondary => switch (this) {
+    AppAccentStyle.mint => const Color(0xFF7D90C8),
+    AppAccentStyle.sunflower => const Color(0xFFE4A11B),
+    AppAccentStyle.sky => const Color(0xFF7D90C8),
+    AppAccentStyle.rose => const Color(0xFFC97DA0),
+  };
+
+  Color get darkSecondary => switch (this) {
+    AppAccentStyle.mint => const Color(0xFF9AACE7),
+    AppAccentStyle.sunflower => const Color(0xFFFFC14D),
+    AppAccentStyle.sky => const Color(0xFFA6C6FF),
+    AppAccentStyle.rose => const Color(0xFFFFB3C6),
+  };
+}
+
 enum CharacterRarity { common, rare, epic, legendary }
 
 extension CharacterRarityDetails on CharacterRarity {
@@ -103,7 +143,7 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   static const int pullCost = 100;
-  static const int pityLimit = 200;
+  static const int pityLimit = 100;
   static const List<int> focusTargets = <int>[10, 25, 45, 60];
   static const String _sessionEmailKey = 'session.email';
   static const String _sessionNameKey = 'session.name';
@@ -130,6 +170,7 @@ class SpiralAppState extends ChangeNotifier {
   bool hapticsEnabled = true;
   bool reminderEnabled = true;
   ThemeMode themeMode = ThemeMode.light;
+  AppAccentStyle accentStyle = AppAccentStyle.mint;
   int dailyTargetMinutes = 90;
   int selectedFocusTarget = 25;
   bool isFocusActive = false;
@@ -159,6 +200,9 @@ class SpiralAppState extends ChangeNotifier {
       });
 
   int get pityRemaining => max(0, pityLimit - pityCounter);
+
+  double get pityProgress =>
+      pityLimit == 0 ? 0 : (pityCounter / pityLimit).clamp(0, 1).toDouble();
 
   double get collectionProgress =>
       roster.isEmpty ? 0 : collectedCount / roster.length;
@@ -306,6 +350,12 @@ class SpiralAppState extends ChangeNotifier {
     _persistProgress();
   }
 
+  void setAccentStyle(AppAccentStyle value) {
+    accentStyle = value;
+    notifyListeners();
+    _persistProgress();
+  }
+
   void startFocusSession() {
     if (isFocusActive && !isFocusPaused) {
       return;
@@ -408,8 +458,17 @@ class SpiralAppState extends ChangeNotifier {
     }
 
     final List<GameCharacter> results = <GameCharacter>[];
+    bool batchHasLegendary = false;
     for (int index = 0; index < count; index += 1) {
-      results.add(_performPull());
+      final GameCharacter pulled = _performPull();
+      results.add(pulled);
+      if (pulled.rarity == CharacterRarity.legendary) {
+        batchHasLegendary = true;
+      }
+    }
+
+    if (count > 1 && batchHasLegendary) {
+      pityCounter = 0;
     }
 
     lastPulledCharacter = results.last;
@@ -599,6 +658,9 @@ class SpiralAppState extends ChangeNotifier {
       totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
       pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
       themeMode = _themeModeFromName(data['themeMode'] as String?);
+      accentStyle = _accentStyleFromName(
+        data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
+      );
       lastPulledCharacter = findCharacterById(
         data['lastPulledCharacterId'] as String? ?? '',
       );
@@ -634,6 +696,7 @@ class SpiralAppState extends ChangeNotifier {
       'totalPulls': totalPulls,
       'pityCounter': pityCounter,
       'themeMode': themeMode.name,
+      'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -694,6 +757,9 @@ class SpiralAppState extends ChangeNotifier {
     totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
     pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
     themeMode = _themeModeFromName(data['themeMode'] as String?);
+    accentStyle = _accentStyleFromName(
+      data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
+    );
     lastPulledCharacter = findCharacterById(
       data['lastPulledCharacterId'] as String? ?? '',
     );
@@ -748,6 +814,7 @@ class SpiralAppState extends ChangeNotifier {
       'totalPulls': totalPulls,
       'pityCounter': pityCounter,
       'themeMode': themeMode.name,
+      'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
     };
   }
@@ -818,6 +885,7 @@ class SpiralAppState extends ChangeNotifier {
     lastPulledCharacter = null;
     lastPulledCharacters = <GameCharacter>[];
     themeMode = ThemeMode.light;
+    accentStyle = AppAccentStyle.mint;
   }
 
   AppDifficulty _difficultyFromName(String? value) {
@@ -834,19 +902,26 @@ class SpiralAppState extends ChangeNotifier {
     );
   }
 
+  AppAccentStyle _accentStyleFromName(String? value) {
+    return AppAccentStyle.values.firstWhere(
+      (AppAccentStyle style) => style.name == value,
+      orElse: () => AppAccentStyle.mint,
+    );
+  }
+
   CharacterRarity _rollRarity({required bool guaranteedLegendary}) {
     if (guaranteedLegendary) {
       return CharacterRarity.legendary;
     }
 
     final int roll = _random.nextInt(1000);
-    if (roll < 20) {
+    if (roll < 10) {
       return CharacterRarity.legendary;
     }
-    if (roll < 110) {
+    if (roll < 100) {
       return CharacterRarity.epic;
     }
-    if (roll < 330) {
+    if (roll < 320) {
       return CharacterRarity.rare;
     }
     return CharacterRarity.common;

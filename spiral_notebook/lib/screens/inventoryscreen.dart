@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
-import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({
@@ -22,103 +21,106 @@ class InventoryScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
-          children: <Widget>[
-            _HeroCard(appState: appState),
-            const SizedBox(height: 16),
-            DifficultySelectorCard(appState: appState),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Character roster',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+        return ColoredBox(
+          color: const Color.fromARGB(0, 255, 255, 255),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
+            children: <Widget>[
+              _HeroCard(appState: appState),
+              const SizedBox(height: 16),
+              // DifficultySelectorCard(appState: appState),
+              // const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Character roster',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your collection now lives here. Tap any character card to inspect the details.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    CharacterRosterGrid(
-                      appState: appState,
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onCharacterTap:
-                          (BuildContext context, GameCharacter character) {
-                            showCharacterDetailSheet(
-                              context,
-                              appState: appState,
-                              character: character,
-                            );
-                          },
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your collection now lives here. Tap any character card to inspect the details.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      CharacterRosterGrid(
+                        appState: appState,
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onCharacterTap:
+                            (BuildContext context, GameCharacter character) {
+                              showCharacterDetailSheet(
+                                context,
+                                appState: appState,
+                                character: character,
+                              );
+                            },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Launch options',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Launch options',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: onStartFocus,
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: const Text('Start focus session'),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: onStartFocus,
+                              icon: const Icon(Icons.play_arrow_rounded),
+                              label: const Text('Start focus session'),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: onOpenGacha,
-                            icon: const Icon(Icons.auto_awesome),
-                            label: const Text('Spend bits in gacha'),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onOpenGacha,
+                              icon: const Icon(Icons.auto_awesome),
+                              label: const Text('Spend bits in gacha'),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: onOpenSettings,
-                            icon: const Icon(Icons.tune_rounded),
-                            label: const Text('Open settings'),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onOpenSettings,
+                              icon: const Icon(Icons.tune_rounded),
+                              label: const Text('Open settings'),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -136,7 +138,7 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        color: const Color(0xFF23384A),
+        color: const Color.fromARGB(255, 238, 140, 54),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +146,7 @@ class _HeroCard extends StatelessWidget {
           Text(
             'Backpack',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
+              color: const Color.fromARGB(255, 255, 255, 255),
               fontWeight: FontWeight.w800,
             ),
           ),

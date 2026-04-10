@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key, required this.appState});
@@ -25,9 +26,10 @@ class _InfoScreenState extends State<InfoScreen> {
     _InfoSlide(
       title: '2. Match the workload',
       body:
-          'Choose an Elementary through College difficulty in Base Camp. That changes how many bits you earn per minute.',
+          'Choose an Elementary through College difficulty here before you start. That changes how many bits you earn per minute.',
       accent: Color(0xFF6E9BB8),
       icon: Icons.tune_rounded,
+      showsDifficultySelector: true,
     ),
     _InfoSlide(
       title: '3. Run a focus session',
@@ -39,7 +41,7 @@ class _InfoScreenState extends State<InfoScreen> {
     _InfoSlide(
       title: '4. Pull and collect',
       body:
-          'Spend bits in the gacha banner to unlock colorful city characters. Every 200 pulls guarantees a legendary.',
+          'Spend bits in the gacha banner to unlock colorful city characters. Every 100 pulls guarantees a legendary.',
       accent: Color(0xFF7DA3A0),
       icon: Icons.auto_awesome,
     ),
@@ -83,22 +85,6 @@ class _InfoScreenState extends State<InfoScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(28),
-                                  color: slide.accent,
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    slide.icon,
-                                    color: Colors.white,
-                                    size: 84,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
                             Text(
                               slide.title,
                               style: Theme.of(context).textTheme.headlineSmall
@@ -109,6 +95,35 @@ class _InfoScreenState extends State<InfoScreen> {
                               slide.body,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
+                            const SizedBox(height: 24),
+                            if (slide.showsDifficultySelector)
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  child: DifficultySelectorCard(
+                                    appState: widget.appState,
+                                    title: 'Pick your starting difficulty',
+                                    description:
+                                        'Choose how fast focus minutes turn into bits before you enter the app. You can change this again from Inventory at any time.',
+                                    padding: const EdgeInsets.all(18),
+                                  ),
+                                ),
+                              )
+                            else
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(28),
+                                    color: slide.accent,
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      slide.icon,
+                                      color: Colors.white,
+                                      size: 84,
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       );
@@ -182,10 +197,12 @@ class _InfoSlide {
     required this.body,
     required this.accent,
     required this.icon,
+    this.showsDifficultySelector = false,
   });
 
   final String title;
   final String body;
   final Color accent;
   final IconData icon;
+  final bool showsDifficultySelector;
 }
