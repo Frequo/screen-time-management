@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.appState});
@@ -98,10 +99,38 @@ class SettingsScreen extends StatelessWidget {
                             appState.setThemeMode(selection.first);
                           },
                         ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Accent color',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Pick the highlight color used for buttons, active states, and selections.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: AppAccentStyle.values
+                              .map((AppAccentStyle style) {
+                                return _AccentStyleChip(
+                                  style: style,
+                                  isSelected: appState.accentStyle == style,
+                                  onSelected: () =>
+                                      appState.setAccentStyle(style),
+                                );
+                              })
+                              .toList(growable: false),
+                        ),
                       ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                DifficultySelectorCard(appState: appState),
                 const SizedBox(height: 12),
                 Card(
                   child: SwitchListTile(
@@ -196,6 +225,68 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _AccentStyleChip extends StatelessWidget {
+  const _AccentStyleChip({
+    required this.style,
+    required this.isSelected,
+    required this.onSelected,
+  });
+
+  final AppAccentStyle style;
+  final bool isSelected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color previewColor = isDark ? style.darkPrimary : style.lightPrimary;
+    final Color previewSecondary = isDark
+        ? style.darkSecondary
+        : style.lightSecondary;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onSelected,
+      child: Ink(
+        width: 132,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: theme.cardColor,
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.dividerColor.withValues(alpha: 0.35),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: <Color>[previewColor, previewSecondary],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              style.label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

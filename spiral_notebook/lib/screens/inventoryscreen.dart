@@ -20,7 +20,6 @@ class InventoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -148,16 +147,16 @@ class _HeroCard extends StatelessWidget {
           Text(
             'Backpack',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: AppPalette.ink,
+              color: isDark ? AppPalette.card : AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Set the phone down, pick a difficulty, and let your focus build the collection.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: isDark ? AppPalette.card : AppPalette.inkMuted),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: isDark ? AppPalette.card : AppPalette.inkMuted,
+            ),
           ),
           const SizedBox(height: 20),
           Wrap(
@@ -190,28 +189,34 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppPalette.sky.withValues(alpha: 0.12),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : AppPalette.sky.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppPalette.sky.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : AppPalette.sky.withValues(alpha: 0.4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: isDark ? AppPalette.card : AppPalette.inkMuted),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: isDark ? AppPalette.card : AppPalette.inkMuted,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppPalette.ink,
+              color: isDark ? AppPalette.card : AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),

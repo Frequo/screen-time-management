@@ -72,6 +72,7 @@ class _MyAppState extends State<MyApp> {
     return AnimatedBuilder(
       animation: widget.appState,
       builder: (BuildContext context, Widget? child) {
+        final AppAccentStyle accentStyle = widget.appState.accentStyle;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nexi: Study Gacha',
@@ -79,11 +80,12 @@ class _MyAppState extends State<MyApp> {
           themeMode: widget.appState.themeMode,
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: const ColorScheme(
+            colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.light,
-              primary: AppPalette.sky,
+              seedColor: accentStyle.lightPrimary,
+              primary: accentStyle.lightPrimary,
               onPrimary: Colors.white,
-              secondary: AppPalette.mint,
+              secondary: accentStyle.lightSecondary,
               onSecondary: AppPalette.ink,
               tertiary: AppPalette.tangerine,
               onTertiary: Colors.white,
@@ -123,12 +125,15 @@ class _MyAppState extends State<MyApp> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(color: AppPalette.sky, width: 1.5),
+                borderSide: BorderSide(
+                  color: accentStyle.lightPrimary,
+                  width: 1.5,
+                ),
               ),
             ),
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
-                backgroundColor: AppPalette.sky,
+                backgroundColor: accentStyle.lightPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -142,7 +147,7 @@ class _MyAppState extends State<MyApp> {
             outlinedButtonTheme: OutlinedButtonThemeData(
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppPalette.ink,
-                side: const BorderSide(color: AppPalette.tangerine),
+                side: BorderSide(color: accentStyle.lightSecondary),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
@@ -191,11 +196,12 @@ class _MyAppState extends State<MyApp> {
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: const ColorScheme(
+            colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
-              primary: AppPalette.sky,
+              seedColor: accentStyle.darkPrimary,
+              primary: accentStyle.darkPrimary,
               onPrimary: Colors.white,
-              secondary: AppPalette.mint,
+              secondary: accentStyle.darkSecondary,
               onSecondary: AppPalette.ink,
               tertiary: AppPalette.tangerine,
               onTertiary: Colors.white,
@@ -235,15 +241,15 @@ class _MyAppState extends State<MyApp> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(
-                  color: AppPalette.mint,
+                borderSide: BorderSide(
+                  color: accentStyle.darkPrimary,
                   width: 1.5,
                 ),
               ),
             ),
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
-                backgroundColor: AppPalette.mint,
+                backgroundColor: accentStyle.darkPrimary,
                 foregroundColor: AppPalette.ink,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -257,7 +263,7 @@ class _MyAppState extends State<MyApp> {
             outlinedButtonTheme: OutlinedButtonThemeData(
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFF4FBFF),
-                side: const BorderSide(color: AppPalette.sky),
+                side: BorderSide(color: accentStyle.darkSecondary),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
