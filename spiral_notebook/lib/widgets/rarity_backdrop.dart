@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class RarityBackdrop extends StatelessWidget {
   const RarityBackdrop({
@@ -15,7 +16,11 @@ class RarityBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _RarityPalette palette = _paletteFor(rarity, accent);
+    final _RarityPalette palette = _paletteFor(
+      rarity,
+      accent,
+      isDark: Theme.of(context).brightness == Brightness.dark,
+    );
 
     return Stack(
       fit: StackFit.expand,
@@ -108,7 +113,40 @@ class _RarityPalette {
   final Color band;
 }
 
-_RarityPalette _paletteFor(CharacterRarity rarity, Color accent) {
+_RarityPalette _paletteFor(
+  CharacterRarity rarity,
+  Color accent, {
+  required bool isDark,
+}) {
+  if (isDark) {
+    return switch (rarity) {
+      CharacterRarity.common => _RarityPalette(
+        base: const Color(0xFF06283A),
+        primaryGlow: AppPalette.darkRollCommon.withValues(alpha: 0.18),
+        secondaryGlow: AppPalette.darkRollRare.withValues(alpha: 0.22),
+        band: AppPalette.darkRollCommon.withValues(alpha: 0.14),
+      ),
+      CharacterRarity.rare => _RarityPalette(
+        base: const Color(0xFF041F32),
+        primaryGlow: AppPalette.darkRollRare.withValues(alpha: 0.28),
+        secondaryGlow: AppPalette.darkRollCommon.withValues(alpha: 0.18),
+        band: AppPalette.darkRollRare.withValues(alpha: 0.18),
+      ),
+      CharacterRarity.epic => _RarityPalette(
+        base: const Color(0xFF2D1704),
+        primaryGlow: AppPalette.darkRollEpic.withValues(alpha: 0.28),
+        secondaryGlow: AppPalette.darkRollLegendary.withValues(alpha: 0.2),
+        band: AppPalette.darkRollEpic.withValues(alpha: 0.18),
+      ),
+      CharacterRarity.legendary => _RarityPalette(
+        base: const Color(0xFF1F0A24),
+        primaryGlow: AppPalette.darkRollLegendary.withValues(alpha: 0.32),
+        secondaryGlow: AppPalette.darkRollEpic.withValues(alpha: 0.18),
+        band: AppPalette.darkRollLegendary.withValues(alpha: 0.2),
+      ),
+    };
+  }
+
   return switch (rarity) {
     CharacterRarity.common => _RarityPalette(
       base: accent.withValues(alpha: 0.16),
@@ -117,22 +155,22 @@ _RarityPalette _paletteFor(CharacterRarity rarity, Color accent) {
       band: accent.withValues(alpha: 0.12),
     ),
     CharacterRarity.rare => _RarityPalette(
-      base: const Color(0xFFEAF7F4),
-      primaryGlow: const Color(0xFF96E5D6).withValues(alpha: 0.32),
-      secondaryGlow: const Color(0xFFB7D7F2).withValues(alpha: 0.26),
-      band: const Color(0xFF7ACDBA).withValues(alpha: 0.22),
+      base: AppPalette.mint.withValues(alpha: 0.12),
+      primaryGlow: AppPalette.mint.withValues(alpha: 0.3),
+      secondaryGlow: AppPalette.sky.withValues(alpha: 0.22),
+      band: AppPalette.mint.withValues(alpha: 0.18),
     ),
     CharacterRarity.epic => _RarityPalette(
-      base: const Color(0xFFF3EEF8),
-      primaryGlow: const Color(0xFFD2B8F6).withValues(alpha: 0.28),
-      secondaryGlow: const Color(0xFFF0B9D4).withValues(alpha: 0.24),
-      band: const Color(0xFFC59AE7).withValues(alpha: 0.2),
+      base: AppPalette.tangerine.withValues(alpha: 0.12),
+      primaryGlow: AppPalette.tangerine.withValues(alpha: 0.28),
+      secondaryGlow: AppPalette.sun.withValues(alpha: 0.24),
+      band: AppPalette.tangerine.withValues(alpha: 0.2),
     ),
     CharacterRarity.legendary => _RarityPalette(
-      base: const Color(0xFFF8F4E8),
-      primaryGlow: const Color(0xFFF6DEA1).withValues(alpha: 0.32),
-      secondaryGlow: const Color(0xFFE3C36E).withValues(alpha: 0.24),
-      band: const Color(0xFFFFE6A1).withValues(alpha: 0.2),
+      base: AppPalette.sun.withValues(alpha: 0.2),
+      primaryGlow: AppPalette.sun.withValues(alpha: 0.32),
+      secondaryGlow: AppPalette.tangerine.withValues(alpha: 0.24),
+      band: AppPalette.sun.withValues(alpha: 0.22),
     ),
   };
 }

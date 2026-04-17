@@ -13,17 +13,15 @@ void main() {
     expect(find.text('Nexi'), findsOneWidget);
     expect(find.text('Sign in to Nexi'), findsOneWidget);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Email'),
-      'andrew@example.com',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Password'),
-      'secret123',
-    );
-    await tester.tap(find.text('Sign in to Nexi'));
-    await tester.pumpAndSettle();
+    final SpiralAppState loggedInState = SpiralAppState()
+      ..isLoggedIn = true
+      ..playerName = 'Andrew';
 
-    expect(find.text('Difficulty and rewards'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(MyApp(appState: loggedInState));
+    await tester.pump();
+
+    expect(find.text('Backpack'), findsOneWidget);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class DifficultySelectorCard extends StatelessWidget {
   const DifficultySelectorCard({
@@ -21,20 +22,18 @@ class DifficultySelectorCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
     final Color activeTileColor = isDark
-        ? const Color(0xFF22353B)
-        : const Color(0xFFE7F3EF);
+        ? AppPalette.sky.withValues(alpha: 0.22)
+        : AppPalette.sky.withValues(alpha: 0.14);
     final Color activeCollegeTileColor = isDark
-        ? const Color(0xFF243241)
-        : const Color(0xFFE2EDF6);
+        ? AppPalette.tangerine.withValues(alpha: 0.24)
+        : AppPalette.sun.withValues(alpha: 0.42);
     final Color inactiveTileColor = isDark
-        ? const Color(0xFF1B2730)
-        : const Color(0xFFF4F8F6);
-    final Color tileTextColor = isDark
-        ? const Color(0xFFF2F7F6)
-        : const Color(0xFF182127);
+        ? AppPalette.night.withValues(alpha: 0.4)
+        : Colors.white.withValues(alpha: 0.54);
+    final Color tileTextColor = isDark ? Colors.white : AppPalette.ink;
     final Color tileSubtextColor = isDark
-        ? const Color(0xFFB8CAC8)
-        : const Color(0xFF5B696B);
+        ? AppPalette.nightMuted
+        : AppPalette.inkMuted;
 
     return Card(
       child: Padding(
@@ -70,7 +69,7 @@ class DifficultySelectorCard extends StatelessWidget {
                         color: option == appState.difficulty
                             ? theme.colorScheme.primary
                             : isDark
-                            ? const Color(0xFF223038)
+                            ? const Color(0xFF1A4666)
                             : Colors.transparent,
                         width: 1.5,
                       ),

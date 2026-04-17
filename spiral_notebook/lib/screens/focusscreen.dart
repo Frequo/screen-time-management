@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class FocusScreen extends StatelessWidget {
   const FocusScreen({super.key, required this.appState});
@@ -25,7 +26,8 @@ class FocusScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: const Color(0xFF1F3140),
+                color: AppPalette.card,
+                border: Border.all(color: AppPalette.mint, width: 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +35,7 @@ class FocusScreen extends StatelessWidget {
                   Text(
                     'Put the phone down',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppPalette.ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -42,7 +44,7 @@ class FocusScreen extends StatelessWidget {
                     'Start a session, step away from the screen, and convert quiet time into bits.',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                    ).textTheme.bodyLarge?.copyWith(color: AppPalette.inkMuted),
                   ),
                   const SizedBox(height: 24),
                   Center(
@@ -53,11 +55,14 @@ class FocusScreen extends StatelessWidget {
                           width: 188,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.14),
+                            color: AppPalette.mint.withValues(alpha: 0.12),
+                            border: Border.all(
+                              color: AppPalette.mint.withValues(alpha: 0.4),
+                            ),
                           ),
                           child: const Icon(
                             Icons.hourglass_bottom_rounded,
-                            color: Colors.white,
+                            color: AppPalette.mint,
                             size: 94,
                           ),
                         ),
@@ -68,7 +73,7 @@ class FocusScreen extends StatelessWidget {
                           ),
                           style: Theme.of(context).textTheme.displaySmall
                               ?.copyWith(
-                                color: Colors.white,
+                                color: AppPalette.ink,
                                 fontWeight: FontWeight.w800,
                               ),
                         ),
@@ -76,7 +81,7 @@ class FocusScreen extends StatelessWidget {
                         Text(
                           '${appState.selectedFocusTarget} minute target',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: Colors.white70),
+                              ?.copyWith(color: AppPalette.inkMuted),
                         ),
                       ],
                     ),
@@ -227,7 +232,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
         );
 
         return ColoredBox(
-          color: const Color(0xFF07111B),
+          color: AppPalette.night,
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
@@ -242,7 +247,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                         padding: const EdgeInsets.all(16),
                         child: PopupMenuButton<_FocusMenuAction>(
                           tooltip: 'Session menu',
-                          color: const Color(0xFF163144),
+                          color: AppPalette.nightSurface,
                           icon: const Icon(
                             Icons.more_vert_rounded,
                             color: Colors.white,
@@ -332,10 +337,12 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                                                 (appState.selectedFocusTarget *
                                                     60))
                                             .clamp(0, 1),
-                                  backgroundColor: const Color(0xFF22384B),
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   valueColor:
                                       const AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF91E2D8),
+                                        AppPalette.sun,
                                       ),
                                 ),
                               ),
@@ -345,7 +352,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                               '$earnedBits bits ready',
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
-                                    color: const Color(0xFFC3F6ED),
+                                    color: AppPalette.sun,
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
@@ -409,10 +416,10 @@ class _AuroraPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: <Color>[
-          Color(0xFF030812),
-          Color(0xFF071624),
-          Color(0xFF0C2230),
-          Color(0xFF112936),
+          Color(0xFF04131F),
+          Color(0xFF062338),
+          Color(0xFF0A3450),
+          Color(0xFF0D4264),
         ],
       ).createShader(rect);
     canvas.drawRect(rect, background);
@@ -421,7 +428,7 @@ class _AuroraPainter extends CustomPainter {
     _paintArc(
       canvas,
       size,
-      color: const Color(0xFFA6FF77),
+      color: AppPalette.mint,
       startFactor: -0.08,
       endFactor: 0.42,
       crestHeight: 0.16,
@@ -434,7 +441,7 @@ class _AuroraPainter extends CustomPainter {
     _paintArc(
       canvas,
       size,
-      color: const Color(0xFF93FF78),
+      color: AppPalette.sky,
       startFactor: 0.18,
       endFactor: 0.73,
       crestHeight: 0.2,
@@ -447,7 +454,7 @@ class _AuroraPainter extends CustomPainter {
     _paintArc(
       canvas,
       size,
-      color: const Color(0xFF7CF2B9),
+      color: AppPalette.tangerine,
       startFactor: 0.56,
       endFactor: 1.05,
       crestHeight: 0.12,
@@ -460,7 +467,7 @@ class _AuroraPainter extends CustomPainter {
     _paintArc(
       canvas,
       size,
-      color: const Color(0xFF9E8FFF),
+      color: AppPalette.sun,
       startFactor: 0.2,
       endFactor: 0.66,
       crestHeight: 0.28,
@@ -664,7 +671,7 @@ class _FocusFact extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F7F6),
+        color: AppPalette.sun.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(

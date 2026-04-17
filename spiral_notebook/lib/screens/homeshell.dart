@@ -4,6 +4,7 @@ import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/focusscreen.dart';
 import 'package:spiral_notebook/screens/gachascreen.dart';
 import 'package:spiral_notebook/screens/inventoryscreen.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.appState});
@@ -84,7 +85,7 @@ class _HomeShellState extends State<HomeShell> {
                 ),
           body: Container(
             color: immersiveFocus
-                ? const Color(0xFF121826)
+                ? AppPalette.night
                 : Theme.of(context).scaffoldBackgroundColor,
             child: SafeArea(
               top: !immersiveFocus,

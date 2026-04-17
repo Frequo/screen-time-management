@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
 
@@ -43,10 +44,10 @@ extension CharacterRarityDetails on CharacterRarity {
   };
 
   Color get color => switch (this) {
-    CharacterRarity.common => const Color(0xFF5B7C99),
-    CharacterRarity.rare => const Color(0xFF0F9D8A),
-    CharacterRarity.epic => const Color(0xFFB85C38),
-    CharacterRarity.legendary => const Color(0xFFE4A11B),
+    CharacterRarity.common => AppPalette.sky,
+    CharacterRarity.rare => AppPalette.mint,
+    CharacterRarity.epic => AppPalette.tangerine,
+    CharacterRarity.legendary => AppPalette.sun,
   };
 }
 

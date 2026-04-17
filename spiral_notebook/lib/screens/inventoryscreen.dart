@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class InventoryScreen extends StatelessWidget {
@@ -19,6 +20,7 @@ class InventoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -132,11 +134,13 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        color: const Color(0xFF23384A),
+        color: isDark ? AppPalette.darkRollRare : AppPalette.card,
+        border: Border.all(color: AppPalette.sky, width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +148,7 @@ class _HeroCard extends StatelessWidget {
           Text(
             'Backpack',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
+              color: AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -153,7 +157,7 @@ class _HeroCard extends StatelessWidget {
             'Set the phone down, pick a difficulty, and let your focus build the collection.',
             style: Theme.of(
               context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+            ).textTheme.bodyLarge?.copyWith(color: isDark ? AppPalette.card : AppPalette.inkMuted),
           ),
           const SizedBox(height: 20),
           Wrap(
@@ -186,11 +190,13 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: AppPalette.sky.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppPalette.sky.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,13 +205,13 @@ class _StatPill extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+            ).textTheme.bodySmall?.copyWith(color: isDark ? AppPalette.card : AppPalette.inkMuted),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
+              color: AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),

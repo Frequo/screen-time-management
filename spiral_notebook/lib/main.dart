@@ -4,6 +4,7 @@ import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/firebase_options.dart';
 import 'package:spiral_notebook/routes.dart';
 import 'package:spiral_notebook/services/focus_ambient_audio.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,29 +79,57 @@ class _MyAppState extends State<MyApp> {
           themeMode: widget.appState.themeMode,
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF5DAFA3),
-              primary: const Color(0xFF5DAFA3),
-              secondary: const Color(0xFF7D90C8),
-              surface: const Color(0xFFF7FAF8),
+            colorScheme: const ColorScheme(
+              brightness: Brightness.light,
+              primary: AppPalette.sky,
+              onPrimary: Colors.white,
+              secondary: AppPalette.mint,
+              onSecondary: AppPalette.ink,
+              tertiary: AppPalette.tangerine,
+              onTertiary: Colors.white,
+              error: Color(0xFFB62318),
+              onError: Colors.white,
+              surface: AppPalette.card,
+              onSurface: AppPalette.ink,
+              surfaceContainerHighest: Color(0xFFFFF1B8),
+              onSurfaceVariant: AppPalette.inkMuted,
+              outline: AppPalette.line,
             ),
-            scaffoldBackgroundColor: const Color(0xFFF0F4F2),
+            scaffoldBackgroundColor: AppPalette.page,
             appBarTheme: const AppBarTheme(
               centerTitle: false,
               backgroundColor: Colors.transparent,
-              foregroundColor: Color(0xFF20303A),
+              foregroundColor: AppPalette.ink,
               elevation: 0,
             ),
             cardTheme: CardThemeData(
-              color: const Color(0xFFFBFDFC),
+              color: AppPalette.card,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
               margin: EdgeInsets.zero,
             ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.72),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: AppPalette.line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: AppPalette.line),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: AppPalette.sky, width: 1.5),
+              ),
+            ),
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
+                backgroundColor: AppPalette.sky,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
@@ -112,6 +141,8 @@ class _MyAppState extends State<MyApp> {
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
               style: OutlinedButton.styleFrom(
+                foregroundColor: AppPalette.ink,
+                side: const BorderSide(color: AppPalette.tangerine),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
@@ -119,35 +150,101 @@ class _MyAppState extends State<MyApp> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
+              ),
+            ),
+            segmentedButtonTheme: SegmentedButtonThemeData(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                  Set<WidgetState> states,
+                ) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppPalette.sun;
+                  }
+                  return Colors.white.withValues(alpha: 0.64);
+                }),
+                foregroundColor: const WidgetStatePropertyAll<Color>(
+                  AppPalette.ink,
+                ),
+                side: const WidgetStatePropertyAll<BorderSide>(
+                  BorderSide(color: AppPalette.line),
+                ),
+              ),
+            ),
+            chipTheme: ChipThemeData(
+              backgroundColor: Colors.white.withValues(alpha: 0.68),
+              selectedColor: AppPalette.mint.withValues(alpha: 0.22),
+              secondarySelectedColor: AppPalette.mint.withValues(alpha: 0.22),
+              side: const BorderSide(color: AppPalette.line),
+              labelStyle: const TextStyle(color: AppPalette.ink),
+              secondaryLabelStyle: const TextStyle(color: AppPalette.ink),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              backgroundColor: Colors.white.withValues(alpha: 0.82),
+              indicatorColor: AppPalette.sun,
+              labelTextStyle: const WidgetStatePropertyAll<TextStyle>(
+                TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
+            colorScheme: const ColorScheme(
               brightness: Brightness.dark,
-              seedColor: const Color(0xFF78C3B8),
-              primary: const Color(0xFF78C3B8),
-              secondary: const Color(0xFF9AACE7),
-              surface: const Color(0xFF162028),
+              primary: AppPalette.sky,
+              onPrimary: Colors.white,
+              secondary: AppPalette.mint,
+              onSecondary: AppPalette.ink,
+              tertiary: AppPalette.tangerine,
+              onTertiary: Colors.white,
+              error: Color(0xFFFF7B73),
+              onError: AppPalette.night,
+              surface: AppPalette.nightSurface,
+              onSurface: Color(0xFFF4FBFF),
+              surfaceContainerHighest: Color(0xFF113450),
+              onSurfaceVariant: AppPalette.nightMuted,
+              outline: Color(0xFF1A4666),
             ),
-            scaffoldBackgroundColor: const Color(0xFF0C141A),
+            scaffoldBackgroundColor: AppPalette.night,
             appBarTheme: const AppBarTheme(
               centerTitle: false,
               backgroundColor: Colors.transparent,
-              foregroundColor: Color(0xFFE7F0ED),
+              foregroundColor: Color(0xFFF4FBFF),
               elevation: 0,
             ),
             cardTheme: CardThemeData(
-              color: const Color(0xFF162028),
+              color: AppPalette.nightSurface,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
               margin: EdgeInsets.zero,
             ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.06),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: Color(0xFF1A4666)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: Color(0xFF1A4666)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: AppPalette.mint,
+                  width: 1.5,
+                ),
+              ),
+            ),
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
+                backgroundColor: AppPalette.mint,
+                foregroundColor: AppPalette.ink,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
@@ -159,6 +256,8 @@ class _MyAppState extends State<MyApp> {
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
               style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFF4FBFF),
+                side: const BorderSide(color: AppPalette.sky),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
@@ -166,6 +265,42 @@ class _MyAppState extends State<MyApp> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
+              ),
+            ),
+            segmentedButtonTheme: SegmentedButtonThemeData(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                  Set<WidgetState> states,
+                ) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppPalette.tangerine;
+                  }
+                  return Colors.white.withValues(alpha: 0.06);
+                }),
+                foregroundColor: const WidgetStatePropertyAll<Color>(
+                  Color(0xFFF4FBFF),
+                ),
+                side: const WidgetStatePropertyAll<BorderSide>(
+                  BorderSide(color: Color(0xFF1A4666)),
+                ),
+              ),
+            ),
+            chipTheme: ChipThemeData(
+              backgroundColor: Colors.white.withValues(alpha: 0.06),
+              selectedColor: AppPalette.sky.withValues(alpha: 0.22),
+              secondarySelectedColor: AppPalette.sky.withValues(alpha: 0.22),
+              side: const BorderSide(color: Color(0xFF1A4666)),
+              labelStyle: const TextStyle(color: Color(0xFFF4FBFF)),
+              secondaryLabelStyle: const TextStyle(color: Color(0xFFF4FBFF)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              backgroundColor: AppPalette.nightSurface,
+              indicatorColor: AppPalette.tangerine,
+              labelTextStyle: const WidgetStatePropertyAll<TextStyle>(
+                TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ColoredBox(
-        color: const Color(0xFFF0F4F2),
+        color: AppPalette.page,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -50,8 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppPalette.card.withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: AppPalette.line),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 64,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF5DAFA3),
+                                  color: AppPalette.sky,
                                 ),
                                 child: const Icon(
                                   Icons.hourglass_bottom_rounded,
@@ -347,23 +349,5 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return 'Sign-in failed. ${error.toString()}';
-  }
-}
-
-class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-    );
   }
 }

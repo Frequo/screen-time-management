@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class GachaScreen extends StatelessWidget {
   const GachaScreen({super.key, required this.appState});
@@ -9,6 +10,7 @@ class GachaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -19,7 +21,8 @@ class GachaScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: const Color(0xFF2E4051),
+                color: isDark ? AppPalette.darkRollRare : AppPalette.card,
+                border: Border.all(color: AppPalette.tangerine, width: 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,7 +30,7 @@ class GachaScreen extends StatelessWidget {
                   Text(
                     'City lights banner',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppPalette.ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -36,7 +39,7 @@ class GachaScreen extends StatelessWidget {
                     'Trade hard-earned bits for pulls and fill your modern city roster.',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                    ).textTheme.bodyLarge?.copyWith(color: AppPalette.inkMuted),
                   ),
                   const SizedBox(height: 20),
                   Wrap(
@@ -206,8 +209,9 @@ class _BannerStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: AppPalette.tangerine.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppPalette.tangerine.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,13 +220,13 @@ class _BannerStat extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+            ).textTheme.bodySmall?.copyWith(color: AppPalette.inkMuted),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
+              color: AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -284,14 +288,5 @@ class _CharacterPreviewTile extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  IconData _rarityIcon(CharacterRarity rarity) {
-    return switch (rarity) {
-      CharacterRarity.common => Icons.person,
-      CharacterRarity.rare => Icons.flash_on_rounded,
-      CharacterRarity.epic => Icons.local_fire_department_rounded,
-      CharacterRarity.legendary => Icons.stars_rounded,
-    };
   }
 }

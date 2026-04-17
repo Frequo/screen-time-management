@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
 
 class CutsceneArgs {
@@ -248,13 +249,24 @@ class _RevealCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool hasMore = currentIndex < characters.length - 1;
     final bool isBatch = characters.length > 1;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color rarityAccent = character.rarity.color;
+    final Color surfaceAccent = _darkRollSurfaceAccent(character.rarity);
 
     return Container(
       key: ValueKey<String>('reveal-${character.id}-$currentIndex'),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: isDark
+            ? const Color(0xEE0B2435)
+            : Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: (isDark ? surfaceAccent : rarityAccent).withValues(
+            alpha: isDark ? 0.8 : 0.3,
+          ),
+          width: 1.5,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -265,7 +277,7 @@ class _RevealCard extends StatelessWidget {
               child: Text(
                 'Pull ${currentIndex + 1} of ${characters.length}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.black54,
+                  color: isDark ? AppPalette.nightMuted : Colors.black54,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -285,7 +297,7 @@ class _RevealCard extends StatelessWidget {
           Text(
             character.rarity.label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: character.rarity.color,
+              color: rarityAccent,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -389,6 +401,7 @@ class PullResultsScreen extends StatelessWidget {
                   final GameCharacter character = characters[index];
                   final _ResultCardPalette palette = _resultPaletteFor(
                     character.rarity,
+                    isDark: Theme.of(context).brightness == Brightness.dark,
                   );
                   return InkWell(
                     borderRadius: BorderRadius.circular(24),
@@ -489,35 +502,80 @@ class _ResultCardPalette {
   final Color subtext;
 }
 
-_ResultCardPalette _resultPaletteFor(CharacterRarity rarity) {
+_ResultCardPalette _resultPaletteFor(
+  CharacterRarity rarity, {
+  required bool isDark,
+}) {
+  if (isDark) {
+    return switch (rarity) {
+      CharacterRarity.common => const _ResultCardPalette(
+        base: Color(0xFF0A2C3C),
+        border: AppPalette.darkRollCommon,
+        spark: AppPalette.sky,
+        text: Color(0xFFE2FFF7),
+        subtext: Color(0xFFA9E7D4),
+      ),
+      CharacterRarity.rare => const _ResultCardPalette(
+        base: Color(0xFF08253A),
+        border: AppPalette.darkRollRare,
+        spark: AppPalette.mint,
+        text: Color(0xFFE0F4FF),
+        subtext: Color(0xFF8EC9E7),
+      ),
+      CharacterRarity.epic => const _ResultCardPalette(
+        base: Color(0xFF2F1806),
+        border: AppPalette.darkRollEpic,
+        spark: AppPalette.tangerine,
+        text: Color(0xFFFFEBD9),
+        subtext: Color(0xFFD7A777),
+      ),
+      CharacterRarity.legendary => const _ResultCardPalette(
+        base: Color(0xFF241028),
+        border: AppPalette.darkRollLegendary,
+        spark: AppPalette.sun,
+        text: Color(0xFFF7E6FF),
+        subtext: Color(0xFFC999D1),
+      ),
+    };
+  }
+
   return switch (rarity) {
     CharacterRarity.common => const _ResultCardPalette(
-      base: Color(0xFFE9E7F3),
-      border: Color(0xFF1E1230),
-      spark: Color(0xFFB687F3),
-      text: Color(0xFF251935),
-      subtext: Color(0xFF68547F),
+      base: Color(0xFFE6F7FF),
+      border: Color(0xFF0C4A6E),
+      spark: AppPalette.sky,
+      text: Color(0xFF10314A),
+      subtext: Color(0xFF466276),
     ),
     CharacterRarity.rare => const _ResultCardPalette(
-      base: Color(0xFFE1F7F2),
-      border: Color(0xFF11322D),
-      spark: Color(0xFF28B9A1),
-      text: Color(0xFF133731),
-      subtext: Color(0xFF3E7D71),
+      base: Color(0xFFE7FFF6),
+      border: Color(0xFF0A4B3B),
+      spark: AppPalette.mint,
+      text: Color(0xFF11372D),
+      subtext: Color(0xFF3B756A),
     ),
     CharacterRarity.epic => const _ResultCardPalette(
-      base: Color(0xFFF7E6F8),
-      border: Color(0xFF32133C),
-      spark: Color(0xFFC56BE8),
-      text: Color(0xFF3B1847),
-      subtext: Color(0xFF81499B),
+      base: Color(0xFFFFF0E1),
+      border: Color(0xFF7A4300),
+      spark: AppPalette.tangerine,
+      text: Color(0xFF5B3200),
+      subtext: Color(0xFF966233),
     ),
     CharacterRarity.legendary => const _ResultCardPalette(
-      base: Color(0xFFFFF0C9),
-      border: Color(0xFF4D3600),
-      spark: Color(0xFFFFBF2F),
-      text: Color(0xFF503700),
-      subtext: Color(0xFF9A6D00),
+      base: Color(0xFFFFF8CC),
+      border: Color(0xFF674D00),
+      spark: AppPalette.sun,
+      text: Color(0xFF5C4300),
+      subtext: Color(0xFF927238),
     ),
+  };
+}
+
+Color _darkRollSurfaceAccent(CharacterRarity rarity) {
+  return switch (rarity) {
+    CharacterRarity.common => AppPalette.darkRollCommon,
+    CharacterRarity.rare => AppPalette.darkRollRare,
+    CharacterRarity.epic => AppPalette.darkRollEpic,
+    CharacterRarity.legendary => AppPalette.darkRollLegendary,
   };
 }

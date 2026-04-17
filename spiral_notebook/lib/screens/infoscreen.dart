@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/theme/app_palette.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key, required this.appState});
@@ -19,28 +20,28 @@ class _InfoScreenState extends State<InfoScreen> {
       title: '1. Park the phone',
       body:
           'Set the phone on a stand where it is visible but out of your hands. The app treats that as your focus station.',
-      accent: Color(0xFF5DAFA3),
+      accent: AppPalette.sun,
       icon: Icons.phone_iphone_rounded,
     ),
     _InfoSlide(
       title: '2. Match the workload',
       body:
           'Choose an Elementary through College difficulty in Base Camp. That changes how many bits you earn per minute.',
-      accent: Color(0xFF6E9BB8),
+      accent: AppPalette.sky,
       icon: Icons.tune_rounded,
     ),
     _InfoSlide(
       title: '3. Run a focus session',
       body:
           'Start a timed focus block and leave the screen alone. Longer sessions earn better bonuses on top of the minute rate.',
-      accent: Color(0xFF4D6E9F),
+      accent: AppPalette.mint,
       icon: Icons.hourglass_bottom_rounded,
     ),
     _InfoSlide(
       title: '4. Pull and collect',
       body:
           'Spend bits in the gacha banner to unlock colorful city characters. Every 200 pulls guarantees a legendary.',
-      accent: Color(0xFF7DA3A0),
+      accent: AppPalette.tangerine,
       icon: Icons.auto_awesome,
     ),
   ];
@@ -127,7 +128,7 @@ class _InfoScreenState extends State<InfoScreen> {
                       decoration: BoxDecoration(
                         color: index == _index
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.black26,
+                            : AppPalette.ink.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     );
