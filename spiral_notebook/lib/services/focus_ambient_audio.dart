@@ -11,7 +11,7 @@ class FocusAmbientAudioController {
   }
 
   static const String _assetPath = 'quietphase-calm-ambient-491577.mp3';
-  static const double _ambientVolume = 0.14;
+  static const double _ambientVolume = 0.32;
 
   final SpiralAppState _appState;
   final AudioPlayer _player = AudioPlayer();

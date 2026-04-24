@@ -133,12 +133,12 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final ThemeData theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        color: isDark ? AppPalette.darkRollRare : AppPalette.card,
+        color: theme.cardColor,
         border: Border.all(color: AppPalette.sky, width: 2),
       ),
       child: Column(
@@ -146,16 +146,16 @@ class _HeroCard extends StatelessWidget {
         children: <Widget>[
           Text(
             'Backpack',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: isDark ? AppPalette.card : AppPalette.ink,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Set the phone down, pick a difficulty, and let your focus build the collection.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: isDark ? AppPalette.card : AppPalette.inkMuted,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 20),
@@ -190,6 +190,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final ThemeData theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -208,15 +209,15 @@ class _StatPill extends StatelessWidget {
         children: <Widget>[
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isDark ? AppPalette.card : AppPalette.inkMuted,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isDark ? Colors.white : AppPalette.inkMuted,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: isDark ? AppPalette.card : AppPalette.ink,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: isDark ? Colors.white : AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),

@@ -12,6 +12,7 @@ class FocusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -26,7 +27,7 @@ class FocusScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: AppPalette.card,
+                color: theme.cardColor,
                 border: Border.all(color: AppPalette.mint, width: 2),
               ),
               child: Column(
@@ -34,17 +35,17 @@ class FocusScreen extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     'Put the phone down',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppPalette.ink,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Start a session, step away from the screen, and convert quiet time into bits.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppPalette.inkMuted),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Center(
@@ -71,17 +72,17 @@ class FocusScreen extends StatelessWidget {
                           appState.formatDuration(
                             appState.selectedFocusTarget * 60,
                           ),
-                          style: Theme.of(context).textTheme.displaySmall
-                              ?.copyWith(
-                                color: AppPalette.ink,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '${appState.selectedFocusTarget} minute target',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppPalette.inkMuted),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),

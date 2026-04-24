@@ -35,9 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return Scaffold(
       body: ColoredBox(
-        color: AppPalette.page,
+        color: theme.scaffoldBackgroundColor,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -50,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: AppPalette.card.withValues(alpha: 0.92),
+                        color: theme.cardColor.withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(32),
                         border: Border.all(color: AppPalette.line),
                       ),

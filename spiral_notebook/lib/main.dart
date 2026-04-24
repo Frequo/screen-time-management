@@ -50,6 +50,33 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final FocusAmbientAudioController _focusAmbientAudioController;
 
+  Color _backgroundFromAccent(Color accent, Brightness brightness) {
+    final HSLColor hsl = HSLColor.fromColor(accent);
+    final double saturation = (hsl.saturation * 0.45).clamp(0.12, 0.38);
+    final double lightness = switch (brightness) {
+      Brightness.light => (hsl.lightness + 0.33).clamp(0.92, 0.97),
+      Brightness.dark => (hsl.lightness - 0.34).clamp(0.09, 0.16),
+    };
+    return hsl.withSaturation(saturation).withLightness(lightness).toColor();
+  }
+
+  Color _cardFromBackground(Color background, Brightness brightness) {
+    final HSLColor hsl = HSLColor.fromColor(background);
+    final double saturation = (hsl.saturation + 0.03).clamp(0.12, 0.42);
+    final double lightness = switch (brightness) {
+      Brightness.light => (hsl.lightness - 0.04).clamp(0.86, 0.94),
+      Brightness.dark => (hsl.lightness - 0.03).clamp(0.06, 0.13),
+    };
+
+    return hsl.withSaturation(saturation).withLightness(lightness).toColor();
+  }
+
+  Color _lightenColor(Color color, double amount) {
+    final HSLColor hsl = HSLColor.fromColor(color);
+    final double lightness = (hsl.lightness + amount).clamp(0.0, 1.0);
+    return hsl.withLightness(lightness).toColor();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +100,27 @@ class _MyAppState extends State<MyApp> {
       animation: widget.appState,
       builder: (BuildContext context, Widget? child) {
         final AppAccentStyle accentStyle = widget.appState.accentStyle;
+        final bool isSunflower = accentStyle == AppAccentStyle.sunflower;
+        final Color lightCard = isSunflower
+            ? AppPalette.card
+            : _cardFromBackground(
+                _backgroundFromAccent(
+                  accentStyle.lightPrimary,
+                  Brightness.light,
+                ),
+                Brightness.light,
+              );
+        final Color lightBackground = isSunflower
+            ? AppPalette.page
+            : _lightenColor(lightCard, 0.04);
+        final Color darkBackground = _backgroundFromAccent(
+          accentStyle.darkPrimary,
+          Brightness.dark,
+        );
+        final Color darkCard = _cardFromBackground(
+          darkBackground,
+          Brightness.dark,
+        );
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Nexi: Study Gacha',
@@ -91,13 +139,13 @@ class _MyAppState extends State<MyApp> {
               onTertiary: Colors.white,
               error: Color(0xFFB62318),
               onError: Colors.white,
-              surface: AppPalette.card,
+              surface: lightCard,
               onSurface: AppPalette.ink,
               surfaceContainerHighest: Color(0xFFFFF1B8),
               onSurfaceVariant: AppPalette.inkMuted,
               outline: AppPalette.line,
             ),
-            scaffoldBackgroundColor: AppPalette.page,
+            scaffoldBackgroundColor: lightBackground,
             appBarTheme: const AppBarTheme(
               centerTitle: false,
               backgroundColor: Colors.transparent,
@@ -105,7 +153,7 @@ class _MyAppState extends State<MyApp> {
               elevation: 0,
             ),
             cardTheme: CardThemeData(
-              color: AppPalette.card,
+              color: lightCard,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
@@ -207,13 +255,13 @@ class _MyAppState extends State<MyApp> {
               onTertiary: Colors.white,
               error: Color(0xFFFF7B73),
               onError: AppPalette.night,
-              surface: AppPalette.nightSurface,
+              surface: darkCard,
               onSurface: Color(0xFFF4FBFF),
               surfaceContainerHighest: Color(0xFF113450),
               onSurfaceVariant: AppPalette.nightMuted,
               outline: Color(0xFF1A4666),
             ),
-            scaffoldBackgroundColor: AppPalette.night,
+            scaffoldBackgroundColor: darkBackground,
             appBarTheme: const AppBarTheme(
               centerTitle: false,
               backgroundColor: Colors.transparent,
@@ -221,7 +269,7 @@ class _MyAppState extends State<MyApp> {
               elevation: 0,
             ),
             cardTheme: CardThemeData(
-              color: AppPalette.nightSurface,
+              color: darkCard,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),

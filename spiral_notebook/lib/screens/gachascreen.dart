@@ -10,7 +10,7 @@ class GachaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final ThemeData theme = Theme.of(context);
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
@@ -21,7 +21,7 @@ class GachaScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: isDark ? AppPalette.darkRollRare : AppPalette.card,
+                color: theme.cardColor,
                 border: Border.all(color: AppPalette.tangerine, width: 2),
               ),
               child: Column(
@@ -29,17 +29,17 @@ class GachaScreen extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     'Character Banner',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppPalette.ink,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Trade hard-earned bits for pulls and fill your modern city roster.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppPalette.inkMuted),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Wrap(
