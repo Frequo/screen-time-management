@@ -237,7 +237,8 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              _AuroraBackground(progress: _controller.value),
+              if (appState.sessionBackgroundEnabled)
+                _AuroraBackground(progress: _controller.value),
               SafeArea(
                 bottom: false,
                 child: Stack(
@@ -270,20 +271,32 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                               if (paused)
                                 const PopupMenuItem<_FocusMenuAction>(
                                   value: _FocusMenuAction.resume,
-                                  child: Text('Resume session'),
+                                  child: Text(
+                                    'Resume session',
+                                    style: TextStyle(color: AppPalette.mint),
+                                  ),
                                 )
                               else
                                 const PopupMenuItem<_FocusMenuAction>(
                                   value: _FocusMenuAction.pause,
-                                  child: Text('Pause session'),
+                                  child: Text(
+                                    'Pause session',
+                                    style: TextStyle(color: AppPalette.mint),
+                                  ),
                                 ),
                               const PopupMenuItem<_FocusMenuAction>(
                                 value: _FocusMenuAction.finish,
-                                child: Text('Finish and collect'),
+                                child: Text(
+                                  'Finish and collect',
+                                  style: TextStyle(color: AppPalette.mint),
+                                ),
                               ),
                               const PopupMenuItem<_FocusMenuAction>(
                                 value: _FocusMenuAction.exit,
-                                child: Text('Exit session'),
+                                child: Text(
+                                  'Exit session',
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
                               ),
                             ];
                           },

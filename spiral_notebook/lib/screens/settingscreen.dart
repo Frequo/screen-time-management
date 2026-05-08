@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
@@ -64,6 +65,27 @@ class SettingsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    _confirmAndDeleteAccount(context, appState),
+                                icon: const Icon(Icons.delete_forever_rounded),
+                                label: const Text('Delete account'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -124,6 +146,16 @@ class SettingsScreen extends StatelessWidget {
                                 );
                               })
                               .toList(growable: false),
+                        ),
+                        const SizedBox(height: 16),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          value: appState.sessionBackgroundEnabled,
+                          onChanged: appState.setSessionBackgroundEnabled,
+                          title: const Text('Session background'),
+                          subtitle: const Text(
+                            'Show the animated background during focus sessions.',
+                          ),
                         ),
                       ],
                     ),
@@ -227,6 +259,76 @@ class SettingsScreen extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> _confirmAndDeleteAccount(
+  BuildContext context,
+  SpiralAppState appState,
+) async {
+  final bool confirmed =
+      await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Delete account?'),
+            content: const Text(
+              'This permanently removes this account from the app on this device. Firebase accounts may need a recent sign-in before deletion.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      ) ??
+      false;
+
+  if (!confirmed || !context.mounted) {
+    return;
+  }
+
+  try {
+    await appState.deleteAccount();
+    if (!context.mounted) {
+      return;
+    }
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/login',
+      (Route<dynamic> route) => false,
+    );
+  } catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_deleteAccountErrorMessage(error))));
+  }
+}
+
+String _deleteAccountErrorMessage(Object error) {
+  if (error is FirebaseAuthException) {
+    return switch (error.code) {
+      'requires-recent-login' =>
+        'Sign out, sign back in, then delete the account again.',
+      'network-request-failed' =>
+        'Network error while deleting the account. Try again when online.',
+      _ => error.message ?? 'Firebase account deletion failed.',
+    };
+  }
+
+  return 'Account deletion failed. ${error.toString()}';
 }
 
 class _AccentStyleChip extends StatelessWidget {

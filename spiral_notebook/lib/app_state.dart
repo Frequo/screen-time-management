@@ -170,6 +170,15 @@ class SpiralAppState extends ChangeNotifier {
   bool ambientSoundsEnabled = true;
   bool hapticsEnabled = true;
   bool reminderEnabled = true;
+  bool sessionBackgroundEnabled = true;
+
+  // Compatibility alias for older references.
+  // ignore: non_constant_identifier_names
+  bool get SessionBackEnabled => sessionBackgroundEnabled;
+
+  // ignore: non_constant_identifier_names
+  set SessionBackEnabled(bool value) => setSessionBackgroundEnabled(value);
+
   ThemeMode themeMode = ThemeMode.light;
   AppAccentStyle accentStyle = AppAccentStyle.mint;
   int dailyTargetMinutes = 90;
@@ -303,6 +312,38 @@ class SpiralAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAccount() async {
+    _stopTicker();
+    isFocusActive = false;
+    isFocusPaused = false;
+    currentSessionSeconds = 0;
+
+    if (firebaseEnabled) {
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final String uid = user.uid;
+        await user.delete();
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .delete();
+        } on FirebaseException {
+          // Auth deletion is the source of truth; profile cleanup may be
+          // blocked by security rules after the auth user is removed.
+        }
+        await _clearLocalCache();
+        _clearSession();
+        notifyListeners();
+        return;
+      }
+    }
+
+    await _clearLocalCache();
+    _clearSession();
+    notifyListeners();
+  }
+
   void setDifficulty(AppDifficulty value) {
     difficulty = value;
     notifyListeners();
@@ -341,6 +382,12 @@ class SpiralAppState extends ChangeNotifier {
 
   void setReminderEnabled(bool value) {
     reminderEnabled = value;
+    notifyListeners();
+    _persistProgress();
+  }
+
+  void setSessionBackgroundEnabled(bool value) {
+    sessionBackgroundEnabled = value;
     notifyListeners();
     _persistProgress();
   }
@@ -647,6 +694,8 @@ class SpiralAppState extends ChangeNotifier {
           data['ambientSoundsEnabled'] as bool? ?? ambientSoundsEnabled;
       hapticsEnabled = data['hapticsEnabled'] as bool? ?? hapticsEnabled;
       reminderEnabled = data['reminderEnabled'] as bool? ?? reminderEnabled;
+      sessionBackgroundEnabled =
+          data['sessionBackgroundEnabled'] as bool? ?? sessionBackgroundEnabled;
       dailyTargetMinutes =
           (data['dailyTargetMinutes'] as num?)?.toInt() ?? dailyTargetMinutes;
       selectedFocusTarget =
@@ -689,6 +738,7 @@ class SpiralAppState extends ChangeNotifier {
       'ambientSoundsEnabled': ambientSoundsEnabled,
       'hapticsEnabled': hapticsEnabled,
       'reminderEnabled': reminderEnabled,
+      'sessionBackgroundEnabled': sessionBackgroundEnabled,
       'dailyTargetMinutes': dailyTargetMinutes,
       'selectedFocusTarget': selectedFocusTarget,
       'totalFocusMinutes': totalFocusMinutes,
@@ -746,6 +796,8 @@ class SpiralAppState extends ChangeNotifier {
         data['ambientSoundsEnabled'] as bool? ?? ambientSoundsEnabled;
     hapticsEnabled = data['hapticsEnabled'] as bool? ?? hapticsEnabled;
     reminderEnabled = data['reminderEnabled'] as bool? ?? reminderEnabled;
+    sessionBackgroundEnabled =
+        data['sessionBackgroundEnabled'] as bool? ?? sessionBackgroundEnabled;
     dailyTargetMinutes =
         (data['dailyTargetMinutes'] as num?)?.toInt() ?? dailyTargetMinutes;
     selectedFocusTarget =
@@ -807,6 +859,7 @@ class SpiralAppState extends ChangeNotifier {
       'ambientSoundsEnabled': ambientSoundsEnabled,
       'hapticsEnabled': hapticsEnabled,
       'reminderEnabled': reminderEnabled,
+      'sessionBackgroundEnabled': sessionBackgroundEnabled,
       'dailyTargetMinutes': dailyTargetMinutes,
       'selectedFocusTarget': selectedFocusTarget,
       'totalFocusMinutes': totalFocusMinutes,
@@ -872,6 +925,7 @@ class SpiralAppState extends ChangeNotifier {
     ambientSoundsEnabled = true;
     hapticsEnabled = true;
     reminderEnabled = true;
+    sessionBackgroundEnabled = true;
     dailyTargetMinutes = 90;
     selectedFocusTarget = 25;
     isFocusActive = false;
