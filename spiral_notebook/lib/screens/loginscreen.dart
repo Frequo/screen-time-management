@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.appState});
@@ -239,6 +240,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: const Icon(Icons.slideshow_rounded),
                             label: const Text('Preview how it works'),
                           ),
+                          const SizedBox(height: 8),
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: _openPrivacyPolicy,
+                              icon: const Icon(Icons.privacy_tip_outlined),
+                              label: const Text('Privacy Policy'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -323,6 +332,21 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final Uri url = Uri.parse('https://google.com');
+    final bool launched = await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    );
+    if (launched || !mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not open the privacy policy.')),
+    );
   }
 
   String _messageForError(Object error) {

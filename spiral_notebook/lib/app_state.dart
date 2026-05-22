@@ -26,9 +26,9 @@ extension AppDifficultyDetails on AppDifficulty {
   };
 
   int get rewardPerMinute => switch (this) {
-    AppDifficulty.elementary => 6,
-    AppDifficulty.middle => 5,
-    AppDifficulty.highSchool => 4,
+    AppDifficulty.elementary => 15,
+    AppDifficulty.middle => 10,
+    AppDifficulty.highSchool => 5,
     AppDifficulty.college => 3,
   };
 }

@@ -37,6 +37,8 @@ class _CutsceneScreenState extends State<CutsceneScreen>
   late final AnimationController _controller;
   Timer? _revealTimer;
   bool _revealed = false;
+  CutsceneArgs? _args;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -45,6 +47,23 @@ class _CutsceneScreenState extends State<CutsceneScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_args != null) {
+      return;
+    }
+
+    final CutsceneArgs resolvedArgs = _resolvedArgs(context);
+    _args = resolvedArgs;
+    if (resolvedArgs.characters.isNotEmpty) {
+      _currentIndex = resolvedArgs.currentIndex.clamp(
+        0,
+        resolvedArgs.characters.length - 1,
+      );
+    }
     _startRevealTimer();
   }
 
@@ -57,7 +76,7 @@ class _CutsceneScreenState extends State<CutsceneScreen>
 
   @override
   Widget build(BuildContext context) {
-    final CutsceneArgs args = _resolvedArgs(context);
+    final CutsceneArgs args = _args ?? _resolvedArgs(context);
     if (args.characters.isEmpty) {
       return Scaffold(
         appBar: AppBar(),
@@ -65,10 +84,7 @@ class _CutsceneScreenState extends State<CutsceneScreen>
       );
     }
 
-    final int currentIndex = args.currentIndex.clamp(
-      0,
-      args.characters.length - 1,
-    );
+    final int currentIndex = _currentIndex.clamp(0, args.characters.length - 1);
     final GameCharacter character = args.characters[currentIndex];
 
     return Scaffold(
@@ -101,7 +117,7 @@ class _CutsceneScreenState extends State<CutsceneScreen>
                         currentIndex: currentIndex,
                         characters: args.characters,
                         allowSkip: args.allowSkip,
-                        onNext: () => _openNext(context, args, currentIndex),
+                        onNext: () => _openNext(context, args),
                         onOpenResults: () =>
                             _openResults(context, args.characters),
                       )
@@ -139,9 +155,15 @@ class _CutsceneScreenState extends State<CutsceneScreen>
     );
   }
 
-  void _startRevealTimer() {
+  void _startRevealTimer({bool notify = false}) {
     _revealTimer?.cancel();
-    _revealed = false;
+    if (notify && mounted) {
+      setState(() {
+        _revealed = false;
+      });
+    } else {
+      _revealed = false;
+    }
     _controller.repeat(reverse: true);
     _revealTimer = Timer(const Duration(milliseconds: 1700), () {
       if (!mounted) {
@@ -154,8 +176,8 @@ class _CutsceneScreenState extends State<CutsceneScreen>
     });
   }
 
-  void _openNext(BuildContext context, CutsceneArgs args, int currentIndex) {
-    if (currentIndex >= args.characters.length - 1) {
+  void _openNext(BuildContext context, CutsceneArgs args) {
+    if (_currentIndex >= args.characters.length - 1) {
       if (args.characters.length > 1) {
         _openResults(context, args.characters);
       } else {
@@ -164,15 +186,10 @@ class _CutsceneScreenState extends State<CutsceneScreen>
       return;
     }
 
-    Navigator.pushReplacementNamed(
-      context,
-      '/cutscene',
-      arguments: CutsceneArgs(
-        characters: args.characters,
-        currentIndex: currentIndex + 1,
-        allowSkip: args.allowSkip,
-      ),
-    );
+    setState(() {
+      _currentIndex += 1;
+    });
+    _startRevealTimer(notify: true);
   }
 
   void _openResults(BuildContext context, List<GameCharacter> characters) {

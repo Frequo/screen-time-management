@@ -288,16 +288,16 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                                 value: _FocusMenuAction.finish,
                                 child: Text(
                                   'Finish and collect',
-                                  style: TextStyle(color: AppPalette.mint),
-                                ),
-                              ),
-                              const PopupMenuItem<_FocusMenuAction>(
-                                value: _FocusMenuAction.exit,
-                                child: Text(
-                                  'Exit session',
                                   style: TextStyle(color: Colors.redAccent),
                                 ),
                               ),
+                              // const PopupMenuItem<_FocusMenuAction>(
+                              //   value: _FocusMenuAction.exit,
+                              //   child: Text(
+                              //     'Exit session',
+                              //     style: TextStyle(color: Colors.redAccent),
+                              //   ),
+                              // ),
                             ];
                           },
                         ),
