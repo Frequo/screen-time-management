@@ -317,6 +317,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) {
         return;
       }
+      if (_isCreateAccount && !widget.appState.hasCompletedTutorial) {
+        widget.appState.startTutorial();
+      }
       Navigator.pushReplacementNamed(context, '/app');
     } catch (error) {
       if (!mounted) {

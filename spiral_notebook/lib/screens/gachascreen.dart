@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
+import 'package:spiral_notebook/widgets/tutorial_overlay.dart';
 
 class GachaScreen extends StatelessWidget {
-  const GachaScreen({super.key, required this.appState});
+  const GachaScreen({super.key, required this.appState, this.tutorialTargets});
 
   final SpiralAppState appState;
+  final TutorialTargetKeys? tutorialTargets;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +45,7 @@ class GachaScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   Wrap(
+                    key: tutorialTargets?.gachaBits,
                     spacing: 12,
                     runSpacing: 12,
                     children: <Widget>[
@@ -61,6 +64,7 @@ class GachaScreen extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
+                        key: tutorialTargets?.drawOne,
                         child: FilledButton.icon(
                           onPressed: () => _handlePull(context, 1),
                           icon: const Icon(Icons.auto_awesome),
@@ -137,32 +141,32 @@ class GachaScreen extends StatelessWidget {
             //     ),
             //   ),
             // ),
-            if (appState.lastPulledCharacter != null) ...<Widget>[
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Most recent pull',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _CharacterPreviewTile(
-                        character: appState.lastPulledCharacter!,
-                        copies: appState.copiesOwned(
-                          appState.lastPulledCharacter!,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            // if (appState.lastPulledCharacter != null) ...<Widget>[
+            //   const SizedBox(height: 16),
+            //   Card(
+            //     child: Padding(
+            //       padding: const EdgeInsets.all(20),
+            //       child: Column(
+            //         crossAxisAlignment: CrossAxisAlignment.start,
+            //         children: <Widget>[
+            //           Text(
+            //             'Most recent pull',
+            //             style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            //               fontWeight: FontWeight.w700,
+            //             ),
+            //           ),
+            //           const SizedBox(height: 12),
+            //           _CharacterPreviewTile(
+            //             character: appState.lastPulledCharacter!,
+            //             copies: appState.copiesOwned(
+            //               appState.lastPulledCharacter!,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ],
           ],
         );
       },
@@ -170,6 +174,19 @@ class GachaScreen extends StatelessWidget {
   }
 
   void _handlePull(BuildContext context, int count) {
+    if (appState.isTutorialActive &&
+        appState.tutorialStep == TutorialStep.drawOne &&
+        count == 1) {
+      final List<GameCharacter> results = appState.tutorialDrawOne();
+      appState.setTutorialStep(TutorialStep.openSettings);
+      Navigator.pushNamed(
+        context,
+        '/cutscene',
+        arguments: CutsceneArgs(characters: results),
+      );
+      return;
+    }
+
     final List<GameCharacter>? results = appState.pullCharacters(count);
     if (results == null || results.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -10,6 +10,23 @@ import 'package:spiral_notebook/theme/app_palette.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
 
+enum TutorialStep {
+  inventoryWelcome,
+  bitsBalance,
+  difficultyRewards,
+  collection,
+  openFocus,
+  startFocus,
+  focusTargets,
+  openGacha,
+  gachaBits,
+  drawOne,
+  openSettings,
+  settingsDifficulty,
+  settingsReactivate,
+  finish,
+}
+
 extension AppDifficultyDetails on AppDifficulty {
   String get label => switch (this) {
     AppDifficulty.elementary => 'Elementary',
@@ -188,9 +205,12 @@ class SpiralAppState extends ChangeNotifier {
   int currentSessionSeconds = 0;
   int totalFocusMinutes = 0;
   int bestSessionSeconds = 0;
-  int bits = 120;
+  int bits = 0;
   int totalPulls = 0;
   int pityCounter = 0;
+  bool hasCompletedTutorial = false;
+  bool isTutorialActive = false;
+  TutorialStep tutorialStep = TutorialStep.inventoryWelcome;
   FocusSessionResult? lastFocusResult;
   GameCharacter? lastPulledCharacter;
   List<GameCharacter> lastPulledCharacters = <GameCharacter>[];
@@ -404,6 +424,66 @@ class SpiralAppState extends ChangeNotifier {
     _persistProgress();
   }
 
+  void startTutorial() {
+    isTutorialActive = true;
+    tutorialStep = TutorialStep.inventoryWelcome;
+    notifyListeners();
+  }
+
+  void restartTutorialForDebug() {
+    hasCompletedTutorial = false;
+    startTutorial();
+    _persistProgress();
+  }
+
+  void advanceTutorial() {
+    if (!isTutorialActive) {
+      return;
+    }
+
+    if (tutorialStep == TutorialStep.finish) {
+      completeTutorial();
+      return;
+    }
+
+    tutorialStep = TutorialStep.values[tutorialStep.index + 1];
+    notifyListeners();
+  }
+
+  void setTutorialStep(TutorialStep step) {
+    if (!isTutorialActive || tutorialStep == step) {
+      return;
+    }
+
+    tutorialStep = step;
+    notifyListeners();
+  }
+
+  void skipTutorial() {
+    if (!isTutorialActive && hasCompletedTutorial) {
+      return;
+    }
+
+    isTutorialActive = false;
+    hasCompletedTutorial = true;
+    tutorialStep = TutorialStep.inventoryWelcome;
+    notifyListeners();
+    _persistProgress();
+  }
+
+  void completeTutorial() {
+    if (!isTutorialActive && hasCompletedTutorial) {
+      return;
+    }
+
+    bits += 100;
+    isTutorialActive = false;
+    hasCompletedTutorial = true;
+    tutorialStep = TutorialStep.inventoryWelcome;
+    notifyListeners();
+    _persistProgress();
+  }
+
   void startFocusSession() {
     if (isFocusActive && !isFocusPaused) {
       return;
@@ -524,6 +604,21 @@ class SpiralAppState extends ChangeNotifier {
     notifyListeners();
     _persistProgress();
     return results;
+  }
+
+  List<GameCharacter> tutorialDrawOne() {
+    if (bits < pullCost) {
+      bits += pullCost - bits;
+    }
+
+    final GameCharacter pulled = _performPull();
+    lastPulledCharacter = pulled;
+    lastPulledCharacters = List<GameCharacter>.unmodifiable(<GameCharacter>[
+      pulled,
+    ]);
+    notifyListeners();
+    _persistProgress();
+    return lastPulledCharacters;
   }
 
   GameCharacter _performPull() {
@@ -707,6 +802,8 @@ class SpiralAppState extends ChangeNotifier {
       bits = (data['bits'] as num?)?.toInt() ?? bits;
       totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
       pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
+      hasCompletedTutorial =
+          data['hasCompletedTutorial'] as bool? ?? hasCompletedTutorial;
       themeMode = _themeModeFromName(data['themeMode'] as String?);
       accentStyle = _accentStyleFromName(
         data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
@@ -746,6 +843,7 @@ class SpiralAppState extends ChangeNotifier {
       'bits': bits,
       'totalPulls': totalPulls,
       'pityCounter': pityCounter,
+      'hasCompletedTutorial': hasCompletedTutorial,
       'themeMode': themeMode.name,
       'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
@@ -809,6 +907,8 @@ class SpiralAppState extends ChangeNotifier {
     bits = (data['bits'] as num?)?.toInt() ?? bits;
     totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
     pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
+    hasCompletedTutorial =
+        data['hasCompletedTutorial'] as bool? ?? hasCompletedTutorial;
     themeMode = _themeModeFromName(data['themeMode'] as String?);
     accentStyle = _accentStyleFromName(
       data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
@@ -867,6 +967,7 @@ class SpiralAppState extends ChangeNotifier {
       'bits': bits,
       'totalPulls': totalPulls,
       'pityCounter': pityCounter,
+      'hasCompletedTutorial': hasCompletedTutorial,
       'themeMode': themeMode.name,
       'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
@@ -933,9 +1034,12 @@ class SpiralAppState extends ChangeNotifier {
     currentSessionSeconds = 0;
     totalFocusMinutes = 0;
     bestSessionSeconds = 0;
-    bits = 120;
+    bits = 0;
     totalPulls = 0;
     pityCounter = 0;
+    hasCompletedTutorial = false;
+    isTutorialActive = false;
+    tutorialStep = TutorialStep.inventoryWelcome;
     lastFocusResult = null;
     lastPulledCharacter = null;
     lastPulledCharacters = <GameCharacter>[];

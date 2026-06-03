@@ -3,6 +3,7 @@ import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
+import 'package:spiral_notebook/widgets/tutorial_overlay.dart';
 
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({
@@ -11,12 +12,14 @@ class InventoryScreen extends StatelessWidget {
     required this.onStartFocus,
     required this.onOpenGacha,
     required this.onOpenSettings,
+    this.tutorialTargets,
   });
 
   final SpiralAppState appState;
   final VoidCallback onStartFocus;
   final VoidCallback onOpenGacha;
   final VoidCallback onOpenSettings;
+  final TutorialTargetKeys? tutorialTargets;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +29,15 @@ class InventoryScreen extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
           children: <Widget>[
-            _HeroCard(appState: appState),
+            _HeroCard(appState: appState, tutorialTargets: tutorialTargets),
             const SizedBox(height: 16),
-            DifficultySelectorCard(appState: appState),
+            DifficultySelectorCard(
+              key: tutorialTargets?.difficulty,
+              appState: appState,
+            ),
             const SizedBox(height: 16),
             Card(
+              key: tutorialTargets?.collection,
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -127,14 +134,16 @@ class InventoryScreen extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.appState});
+  const _HeroCard({required this.appState, required this.tutorialTargets});
 
   final SpiralAppState appState;
+  final TutorialTargetKeys? tutorialTargets;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Container(
+      key: tutorialTargets?.inventoryHero,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
@@ -163,7 +172,11 @@ class _HeroCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: <Widget>[
-              _StatPill(label: 'Bits', value: '${appState.bits}'),
+              _StatPill(
+                key: tutorialTargets?.bits,
+                label: 'Bits',
+                value: '${appState.bits}',
+              ),
               _StatPill(
                 label: 'Collected',
                 value: '${appState.collectedCount}/42',
@@ -182,7 +195,7 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _StatPill extends StatelessWidget {
-  const _StatPill({required this.label, required this.value});
+  const _StatPill({super.key, required this.label, required this.value});
 
   final String label;
   final String value;

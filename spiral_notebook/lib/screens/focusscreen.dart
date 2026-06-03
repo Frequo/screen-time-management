@@ -4,11 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
+import 'package:spiral_notebook/widgets/tutorial_overlay.dart';
 
 class FocusScreen extends StatelessWidget {
-  const FocusScreen({super.key, required this.appState});
+  const FocusScreen({super.key, required this.appState, this.tutorialTargets});
 
   final SpiralAppState appState;
+  final TutorialTargetKeys? tutorialTargets;
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +93,14 @@ class FocusScreen extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
+                        key: tutorialTargets?.focusStart,
                         child: FilledButton.icon(
-                          onPressed: appState.startFocusSession,
+                          onPressed:
+                              appState.isTutorialActive &&
+                                  appState.tutorialStep ==
+                                      TutorialStep.startFocus
+                              ? appState.advanceTutorial
+                              : appState.startFocusSession,
                           icon: const Icon(Icons.play_arrow_rounded),
                           label: const Text('Start focus session'),
                         ),
@@ -104,6 +112,7 @@ class FocusScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Card(
+              key: tutorialTargets?.focusTargets,
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
