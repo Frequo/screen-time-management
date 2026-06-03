@@ -141,32 +141,32 @@ class GachaScreen extends StatelessWidget {
             //     ),
             //   ),
             // ),
-            // if (appState.lastPulledCharacter != null) ...<Widget>[
-            //   const SizedBox(height: 16),
-            //   Card(
-            //     child: Padding(
-            //       padding: const EdgeInsets.all(20),
-            //       child: Column(
-            //         crossAxisAlignment: CrossAxisAlignment.start,
-            //         children: <Widget>[
-            //           Text(
-            //             'Most recent pull',
-            //             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            //               fontWeight: FontWeight.w700,
-            //             ),
-            //           ),
-            //           const SizedBox(height: 12),
-            //           _CharacterPreviewTile(
-            //             character: appState.lastPulledCharacter!,
-            //             copies: appState.copiesOwned(
-            //               appState.lastPulledCharacter!,
-            //             ),
-            //           ),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            // ],
+            if (appState.lastPulledCharacter != null) ...<Widget>[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Most recent pull',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _CharacterPreviewTile(
+                        character: appState.lastPulledCharacter!,
+                        copies: appState.copiesOwned(
+                          appState.lastPulledCharacter!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         );
       },
