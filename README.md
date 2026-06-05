@@ -78,3 +78,8 @@ Checklist:
 - Add the difficulty setting card into the onboarding screen
 - Character view should be embedded into the inventory screen instead of being a separate screen, and the user can click on each character to view the details
 - 
+
+
+6/4/26
+- Tutorial Issues: laggy, still able to scroll when you shouldn't, boots to the login screen when it shouldn't, 
+- Switch Account no working
