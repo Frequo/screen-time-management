@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/widgets/app_bar_settings_action.dart';
 import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
 
 typedef CharacterTapHandler =
@@ -13,7 +14,10 @@ class CharacterCollectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Character View')),
+      appBar: AppBar(
+        title: const Text('Character View'),
+        actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
+      ),
       body: ColoredBox(
         color: Theme.of(context).scaffoldBackgroundColor,
         child: CharacterRosterGrid(
@@ -42,7 +46,10 @@ class CharacterDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool owned = appState.isCollected(character);
     return Scaffold(
-      appBar: AppBar(title: Text(owned ? character.name : 'Unknown character')),
+      appBar: AppBar(
+        title: Text(owned ? character.name : 'Unknown character'),
+        actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
+      ),
       body: CharacterDetailBody(appState: appState, character: character),
     );
   }
@@ -202,6 +209,10 @@ Future<void> showCharacterDetailSheet(
                     ? character.name
                     : 'Unknown character',
               ),
+              actions: const <Widget>[
+                AppBarSettingsAction(),
+                SizedBox(width: 8),
+              ],
             ),
             body: CharacterDetailBody(appState: appState, character: character),
           ),

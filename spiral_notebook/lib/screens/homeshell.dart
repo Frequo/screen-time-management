@@ -174,6 +174,12 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   List<Widget> _buildActions(BuildContext context) {
+    if (_selectedIndex == 2) {
+      return const <Widget>[
+        SizedBox(width: 8),
+      ];
+    }
+
     return <Widget>[
       IconButton(
         key: _tutorialTargets.settingsButton,

@@ -177,6 +177,25 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    Card(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        leading: Icon(
+                          Icons.sensors_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: const Text('Connect phone stand'),
+                        subtitle: const Text(
+                          'Pair with the FSR Phone BLE stand and review the sensor protocol.',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.pushNamed(context, '/connect'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     DifficultySelectorCard(
                       key: tutorialTargets?.settingsDifficulty,
                       appState: appState,

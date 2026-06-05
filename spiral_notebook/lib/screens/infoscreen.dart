@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
+import 'package:spiral_notebook/widgets/app_bar_settings_action.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 
 class InfoScreen extends StatefulWidget {
@@ -57,7 +58,10 @@ class _InfoScreenState extends State<InfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('How it works')),
+      appBar: AppBar(
+        title: const Text('How it works'),
+        actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
+      ),
       body: ColoredBox(
         color: Theme.of(context).scaffoldBackgroundColor,
         child: SafeArea(

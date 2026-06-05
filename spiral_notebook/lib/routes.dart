@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
+import 'package:spiral_notebook/screens/connectscreen.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
 import 'package:spiral_notebook/screens/homeshell.dart';
 import 'package:spiral_notebook/screens/infoscreen.dart';
@@ -26,6 +27,11 @@ Route<dynamic> onGenerateAppRoute(
     case '/settings':
       return _buildRoute(
         SettingsScreen(appState: appState),
+        settings: settings,
+      );
+    case '/connect':
+      return _buildRoute(
+        ConnectStandScreen(appState: appState),
         settings: settings,
       );
     case '/info':
