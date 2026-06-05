@@ -20,13 +20,14 @@ class SettingsScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (BuildContext context, Widget? child) {
-        return Scaffold(
-          appBar: AppBar(title: const Text('Settings')),
-          body: ColoredBox(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: Stack(
-              children: <Widget>[
-                ListView(
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Scaffold(
+              appBar: AppBar(title: const Text('Settings')),
+              body: ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: <Widget>[
                     Card(
@@ -329,16 +330,16 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (_shouldShowSettingsTutorial(appState, tutorialTargets))
-                  TutorialOverlay(
-                    appState: appState,
-                    targetKeys: tutorialTargets!,
-                    onPrimary: () => _handleSettingsTutorialPrimary(appState),
-                    onSkip: appState.skipTutorial,
-                  ),
-              ],
+              ),
             ),
-          ),
+            if (_shouldShowSettingsTutorial(appState, tutorialTargets))
+              TutorialOverlay(
+                appState: appState,
+                targetKeys: tutorialTargets!,
+                onPrimary: () => _handleSettingsTutorialPrimary(appState),
+                onSkip: appState.skipTutorial,
+              ),
+          ],
         );
       },
     );

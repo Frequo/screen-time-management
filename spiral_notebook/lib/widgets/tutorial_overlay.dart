@@ -46,22 +46,55 @@ class TutorialOverlay extends StatefulWidget {
 
 class _TutorialOverlayState extends State<TutorialOverlay> {
   Rect? _targetRect;
+  TutorialStep? _lastStep;
+  Animation<double>? _routeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _lastStep = widget.appState.tutorialStep;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateTargetRect();
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-measure once the screen finishes sliding in: during a route push the
+    // target is still off-screen on the first frame, so its settled position
+    // is only known after the transition completes.
+    final Animation<double>? animation = ModalRoute.of(context)?.animation;
+    if (animation != _routeAnimation) {
+      _routeAnimation?.removeStatusListener(_handleRouteStatus);
+      _routeAnimation = animation;
+      _routeAnimation?.addStatusListener(_handleRouteStatus);
+    }
+  }
+
+  @override
   void didUpdateWidget(covariant TutorialOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.appState.tutorialStep != widget.appState.tutorialStep) {
+    // appState is a single shared instance, so oldWidget.appState and
+    // widget.appState read the same tutorialStep field and can never differ.
+    // Track the step we last measured ourselves and recompute when it changes.
+    if (_lastStep != widget.appState.tutorialStep) {
+      _lastStep = widget.appState.tutorialStep;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _updateTargetRect();
       });
+    }
+  }
+
+  @override
+  void dispose() {
+    _routeAnimation?.removeStatusListener(_handleRouteStatus);
+    super.dispose();
+  }
+
+  void _handleRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      _updateTargetRect();
     }
   }
 
@@ -125,13 +158,24 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       return;
     }
 
-    final Offset offset = box.localToGlobal(Offset.zero);
+    final Rect globalRect = box.localToGlobal(Offset.zero) & box.size;
     setState(() {
       _targetRect = _spotlightRectFor(
         widget.appState.tutorialStep,
-        offset & box.size,
+        _toOverlaySpace(globalRect),
       );
     });
+  }
+
+  /// Maps a rect from global (screen) coordinates into this overlay's own
+  /// coordinate space, so the spotlight lines up with the target regardless of
+  /// where the overlay sits in the tree (e.g. above an app bar).
+  Rect _toOverlaySpace(Rect globalRect) {
+    final RenderObject? overlayRender = context.findRenderObject();
+    if (overlayRender is RenderBox && overlayRender.hasSize) {
+      return overlayRender.globalToLocal(globalRect.topLeft) & globalRect.size;
+    }
+    return globalRect;
   }
 
   GlobalKey? _keyFor(TutorialStep step) {

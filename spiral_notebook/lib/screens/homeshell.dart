@@ -74,29 +74,30 @@ class _HomeShellState extends State<HomeShell> {
 
         final List<String> titles = <String>['Gacha', 'Inventory', 'Focus'];
 
-        return Scaffold(
-          extendBody: !immersiveFocus,
-          appBar: immersiveFocus
-              ? null
-              : AppBar(
-                  automaticallyImplyLeading: false,
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(titles[_selectedIndex]),
-                      Text(
-                        widget.appState.playerName.isEmpty
-                            ? 'Nexi'
-                            : 'Welcome back, ${widget.appState.playerName}!',
-                        style: Theme.of(context).textTheme.bodySmall,
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Scaffold(
+              extendBody: !immersiveFocus,
+              appBar: immersiveFocus
+                  ? null
+                  : AppBar(
+                      automaticallyImplyLeading: false,
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(titles[_selectedIndex]),
+                          Text(
+                            widget.appState.playerName.isEmpty
+                                ? 'Nexi'
+                                : 'Welcome back, ${widget.appState.playerName}!',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  actions: _buildActions(context),
-                ),
-          body: Stack(
-            children: <Widget>[
-              Container(
+                      actions: _buildActions(context),
+                    ),
+              body: Container(
                 color: immersiveFocus
                     ? AppPalette.night
                     : Theme.of(context).scaffoldBackgroundColor,
@@ -106,59 +107,61 @@ class _HomeShellState extends State<HomeShell> {
                   child: IndexedStack(index: _selectedIndex, children: screens),
                 ),
               ),
-              if (_shouldShowShellTutorial)
-                TutorialOverlay(
-                  appState: widget.appState,
-                  targetKeys: _tutorialTargets,
-                  onPrimary: () => _handleTutorialPrimary(context),
-                  onSkip: widget.appState.skipTutorial,
-                ),
-            ],
-          ),
-          bottomNavigationBar: immersiveFocus
-              ? null
-              : Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: NavigationBar(
-                    selectedIndex: _selectedIndex,
-                    backgroundColor: Theme.of(context).cardColor,
-                    onDestinationSelected: (int value) {
-                      setState(() {
-                        _selectedIndex = value;
-                      });
-                      if (widget.appState.isTutorialActive &&
-                          widget.appState.tutorialStep ==
-                              TutorialStep.openFocus &&
-                          value == 2) {
-                        widget.appState.setTutorialStep(
-                          TutorialStep.startFocus,
-                        );
-                      } else if (widget.appState.isTutorialActive &&
-                          widget.appState.tutorialStep ==
-                              TutorialStep.openGacha &&
-                          value == 0) {
-                        widget.appState.setTutorialStep(TutorialStep.gachaBits);
-                      }
-                      _syncSystemUi();
-                    },
-                    destinations: <NavigationDestination>[
-                      NavigationDestination(
-                        key: _tutorialTargets.gachaTab,
-                        icon: const Icon(Icons.auto_awesome),
-                        label: 'Gacha',
+              bottomNavigationBar: immersiveFocus
+                  ? null
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: NavigationBar(
+                        selectedIndex: _selectedIndex,
+                        backgroundColor: Theme.of(context).cardColor,
+                        onDestinationSelected: (int value) {
+                          setState(() {
+                            _selectedIndex = value;
+                          });
+                          if (widget.appState.isTutorialActive &&
+                              widget.appState.tutorialStep ==
+                                  TutorialStep.openFocus &&
+                              value == 2) {
+                            widget.appState.setTutorialStep(
+                              TutorialStep.startFocus,
+                            );
+                          } else if (widget.appState.isTutorialActive &&
+                              widget.appState.tutorialStep ==
+                                  TutorialStep.openGacha &&
+                              value == 0) {
+                            widget.appState.setTutorialStep(
+                              TutorialStep.gachaBits,
+                            );
+                          }
+                          _syncSystemUi();
+                        },
+                        destinations: <NavigationDestination>[
+                          NavigationDestination(
+                            key: _tutorialTargets.gachaTab,
+                            icon: const Icon(Icons.auto_awesome),
+                            label: 'Gacha',
+                          ),
+                          const NavigationDestination(
+                            icon: Icon(Icons.home_rounded),
+                            label: 'Inventory',
+                          ),
+                          NavigationDestination(
+                            key: _tutorialTargets.focusTab,
+                            icon: const Icon(Icons.hourglass_bottom),
+                            label: 'Focus',
+                          ),
+                        ],
                       ),
-                      const NavigationDestination(
-                        icon: Icon(Icons.home_rounded),
-                        label: 'Inventory',
-                      ),
-                      NavigationDestination(
-                        key: _tutorialTargets.focusTab,
-                        icon: const Icon(Icons.hourglass_bottom),
-                        label: 'Focus',
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+            ),
+            if (_shouldShowShellTutorial)
+              TutorialOverlay(
+                appState: widget.appState,
+                targetKeys: _tutorialTargets,
+                onPrimary: () => _handleTutorialPrimary(context),
+                onSkip: widget.appState.skipTutorial,
+              ),
+          ],
         );
       },
     );
@@ -175,9 +178,7 @@ class _HomeShellState extends State<HomeShell> {
 
   List<Widget> _buildActions(BuildContext context) {
     if (_selectedIndex == 2) {
-      return const <Widget>[
-        SizedBox(width: 8),
-      ];
+      return const <Widget>[SizedBox(width: 8)];
     }
 
     return <Widget>[
