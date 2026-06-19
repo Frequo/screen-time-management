@@ -37,6 +37,7 @@ class _CutsceneScreenState extends State<CutsceneScreen>
   late final AnimationController _controller;
   Timer? _revealTimer;
   bool _revealed = false;
+  bool _isNavigating = false;
   CutsceneArgs? _args;
   int _currentIndex = 0;
 
@@ -120,6 +121,8 @@ class _CutsceneScreenState extends State<CutsceneScreen>
                         onNext: () => _openNext(context, args),
                         onOpenResults: () =>
                             _openResults(context, args.characters),
+                        onViewCharacter: () =>
+                            _viewCharacter(context, character),
                       )
                     : _HourglassAnimation(
                         controller: _controller,
@@ -177,10 +180,16 @@ class _CutsceneScreenState extends State<CutsceneScreen>
   }
 
   void _openNext(BuildContext context, CutsceneArgs args) {
+    // Ignore taps until the current card has revealed, and once we have begun
+    // navigating away, so rapid taps can't skip reveals or stack routes.
+    if (_isNavigating || !_revealed) {
+      return;
+    }
     if (_currentIndex >= args.characters.length - 1) {
       if (args.characters.length > 1) {
         _openResults(context, args.characters);
       } else {
+        _isNavigating = true;
         Navigator.pop(context);
       }
       return;
@@ -193,11 +202,31 @@ class _CutsceneScreenState extends State<CutsceneScreen>
   }
 
   void _openResults(BuildContext context, List<GameCharacter> characters) {
+    if (_isNavigating) {
+      return;
+    }
+    _isNavigating = true;
     Navigator.pushReplacementNamed(
       context,
       '/pull-results',
       arguments: PullResultsArgs(characters: characters),
     );
+  }
+
+  void _viewCharacter(BuildContext context, GameCharacter character) {
+    if (_isNavigating) {
+      return;
+    }
+    _isNavigating = true;
+    // Push (not replace) so the remaining reveals in a multi-pull sequence are
+    // preserved when the user returns from the character detail screen.
+    Navigator.pushNamed(context, '/character', arguments: character.id).then((
+      Object? _,
+    ) {
+      if (mounted) {
+        _isNavigating = false;
+      }
+    });
   }
 }
 
@@ -252,6 +281,7 @@ class _RevealCard extends StatelessWidget {
     required this.allowSkip,
     required this.onNext,
     required this.onOpenResults,
+    required this.onViewCharacter,
   });
 
   final GameCharacter character;
@@ -261,6 +291,7 @@ class _RevealCard extends StatelessWidget {
   final bool allowSkip;
   final VoidCallback onNext;
   final VoidCallback onOpenResults;
+  final VoidCallback onViewCharacter;
 
   @override
   Widget build(BuildContext context) {
@@ -338,11 +369,7 @@ class _RevealCard extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => Navigator.pushReplacementNamed(
-                    context,
-                    '/character',
-                    arguments: character.id,
-                  ),
+                  onPressed: onViewCharacter,
                   child: const Text('View character'),
                 ),
               ),

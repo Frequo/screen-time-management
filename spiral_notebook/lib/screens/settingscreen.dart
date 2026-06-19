@@ -63,10 +63,11 @@ class SettingsScreen extends StatelessWidget {
                                       if (!context.mounted) {
                                         return;
                                       }
-                                      Navigator.pushNamedAndRemoveUntil(
+                                      // Pop back to the root auth gate, which
+                                      // now renders the login screen.
+                                      Navigator.popUntil(
                                         context,
-                                        '/login',
-                                        (Route<dynamic> route) => false,
+                                        (Route<dynamic> route) => route.isFirst,
                                       );
                                     },
                                     icon: const Icon(Icons.swap_horiz_rounded),
@@ -319,10 +320,9 @@ class SettingsScreen extends StatelessWidget {
                         if (!context.mounted) {
                           return;
                         }
-                        Navigator.pushNamedAndRemoveUntil(
+                        Navigator.popUntil(
                           context,
-                          '/login',
-                          (Route<dynamic> route) => false,
+                          (Route<dynamic> route) => route.isFirst,
                         );
                       },
                       icon: const Icon(Icons.logout_rounded),
@@ -410,11 +410,7 @@ Future<void> _confirmAndDeleteAccount(
     if (!context.mounted) {
       return;
     }
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/login',
-      (Route<dynamic> route) => false,
-    );
+    Navigator.popUntil(context, (Route<dynamic> route) => route.isFirst);
   } catch (error) {
     if (!context.mounted) {
       return;

@@ -314,13 +314,10 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
         createAccount: _isCreateAccount,
       );
-      if (!mounted) {
-        return;
-      }
-      if (_isCreateAccount && !widget.appState.hasCompletedTutorial) {
-        widget.appState.startTutorial();
-      }
-      Navigator.pushReplacementNamed(context, '/app');
+      // On success the reactive auth gate swaps to the home shell on its own
+      // once login sets isLoggedIn = true. New-account onboarding is started
+      // inside login() itself, because this screen may already be unmounted by
+      // the time this await returns.
     } catch (error) {
       if (!mounted) {
         return;

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/firebase_options.dart';
 import 'package:spiral_notebook/routes.dart';
+import 'package:spiral_notebook/screens/homeshell.dart';
+import 'package:spiral_notebook/screens/loginscreen.dart';
 import 'package:spiral_notebook/services/focus_ambient_audio.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 
@@ -358,7 +360,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ),
-          initialRoute: widget.appState.isLoggedIn ? '/app' : '/login',
+          home: _AuthGate(appState: widget.appState),
           onGenerateRoute: (RouteSettings settings) =>
               onGenerateAppRoute(settings, widget.appState),
         );
@@ -369,6 +371,29 @@ class _MyAppState extends State<MyApp> {
   late final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver(
     onBackgrounded: widget.appState.pauseFocusSession,
   );
+}
+
+/// Reactive root: swaps between the login screen and the home shell based on
+/// [SpiralAppState.isLoggedIn]. Because it listens to the app state, session
+/// restoration on cold start and sign-out from any source (token expiry,
+/// account deletion, etc.) are reflected immediately, instead of being baked
+/// into a one-time initialRoute that never updates.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate({required this.appState});
+
+  final SpiralAppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (BuildContext context, Widget? child) {
+        return appState.isLoggedIn
+            ? HomeShell(appState: appState)
+            : LoginScreen(appState: appState);
+      },
+    );
+  }
 }
 
 class _AppLifecycleObserver with WidgetsBindingObserver {

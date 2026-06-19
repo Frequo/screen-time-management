@@ -21,6 +21,8 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _selectedIndex = 1;
   final TutorialTargetKeys _tutorialTargets = TutorialTargetKeys();
+  bool _settingsOpen = false;
+  bool? _lastImmersiveUi;
 
   @override
   void initState() {
@@ -171,6 +173,12 @@ class _HomeShellState extends State<HomeShell> {
     final bool immersive =
         (widget.appState.isFocusActive || widget.appState.isFocusPaused) &&
         _selectedIndex == 2;
+    // The app state notifies every second during a focus session; only touch
+    // the platform UI mode when the immersive state actually changes.
+    if (immersive == _lastImmersiveUi) {
+      return;
+    }
+    _lastImmersiveUi = immersive;
     SystemChrome.setEnabledSystemUIMode(
       immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
     );
@@ -256,10 +264,17 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   void _openSettings(BuildContext context) {
+    // Guard against a second SettingsScreen being pushed while one is already
+    // open (the app-bar icon and the inventory button both call this). Two live
+    // SettingsScreens would reuse the same tutorial GlobalKeys and crash.
+    if (_settingsOpen) {
+      return;
+    }
     if (widget.appState.isTutorialActive &&
         widget.appState.tutorialStep == TutorialStep.openSettings) {
       widget.appState.setTutorialStep(TutorialStep.settingsDifficulty);
     }
+    _settingsOpen = true;
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -270,6 +285,6 @@ class _HomeShellState extends State<HomeShell> {
           );
         },
       ),
-    );
+    ).whenComplete(() => _settingsOpen = false);
   }
 }

@@ -146,7 +146,11 @@ class FocusSessionResult {
 
 class SpiralAppState extends ChangeNotifier {
   SpiralAppState({this.firebaseEnabled = false}) {
-    unawaited(_hydrateLocalCache());
+    // Keep a handle to the local-cache load so the Firebase reconcile can wait
+    // for it (otherwise the cached updatedAtClient/progress may not be in memory
+    // yet and a stale server snapshot could clobber newer offline progress).
+    _localHydration = _hydrateLocalCache();
+    unawaited(_localHydration!);
 
     if (!firebaseEnabled) {
       return;
@@ -176,7 +180,10 @@ class SpiralAppState extends ChangeNotifier {
 
   StreamSubscription<User?>? _authSubscription;
   Timer? _focusTicker;
-  bool _isHydratingProgress = false;
+  Future<void>? _progressLoad;
+  Future<void>? _localHydration;
+  int _progressUpdatedAt = 0;
+  int? _lockedRewardPerMinute;
 
   bool isLoggedIn = false;
   String playerName = '';
@@ -263,6 +270,7 @@ class SpiralAppState extends ChangeNotifier {
     if (!firebaseEnabled) {
       _applyLocalLogin(normalizedName, trimmedEmail);
       await _persistLocalCache();
+      _maybeStartOnboarding(createAccount);
       return;
     }
 
@@ -297,6 +305,7 @@ class SpiralAppState extends ChangeNotifier {
         email: trimmedEmail,
       );
       await _loadProgressFromFirebase();
+      _maybeStartOnboarding(createAccount);
       return;
     } on FirebaseAuthException catch (error) {
       if (await _canRecoverFromNetworkSignInFailure(
@@ -312,6 +321,16 @@ class SpiralAppState extends ChangeNotifier {
         return;
       }
       rethrow;
+    }
+  }
+
+  // Starts the first-time tutorial for a freshly created account. This lives in
+  // the app state (not the login screen) because the reactive auth gate unmounts
+  // the login screen as soon as isLoggedIn flips true, so post-await code there
+  // is not guaranteed to run.
+  void _maybeStartOnboarding(bool createAccount) {
+    if (createAccount && !hasCompletedTutorial) {
+      startTutorial();
     }
   }
 
@@ -341,17 +360,39 @@ class SpiralAppState extends ChangeNotifier {
     if (firebaseEnabled) {
       final User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final String uid = user.uid;
-        await user.delete();
+        // Delete the Firestore profile FIRST, while the user is still
+        // authenticated. Security rules typically only let a user delete their
+        // own document, so doing this after user.delete() would be rejected and
+        // leave the profile (and its PII) orphaned in Firestore.
+        bool deletedProfile = false;
         try {
           await FirebaseFirestore.instance
               .collection('users')
-              .doc(uid)
+              .doc(user.uid)
               .delete();
+          deletedProfile = true;
         } on FirebaseException {
-          // Auth deletion is the source of truth; profile cleanup may be
-          // blocked by security rules after the auth user is removed.
+          // Best effort; proceed with auth deletion regardless.
         }
+
+        try {
+          await user.delete();
+        } catch (error) {
+          // Auth deletion commonly fails with requires-recent-login. Restore the
+          // profile + progress we just removed so the account isn't left
+          // half-deleted (cloud progress wiped while the login still works),
+          // then rethrow so the UI can prompt a re-login and retry.
+          if (deletedProfile) {
+            await _syncProfileToFirebase(
+              user: user,
+              resolvedName: playerName,
+              email: playerEmail,
+            );
+            await _persistProgress();
+          }
+          rethrow;
+        }
+
         await _clearLocalCache();
         _clearSession();
         notifyListeners();
@@ -491,6 +532,9 @@ class SpiralAppState extends ChangeNotifier {
 
     if (!isFocusPaused) {
       currentSessionSeconds = 0;
+      // Lock the reward rate to the difficulty chosen when the session begins,
+      // so switching difficulty mid-session can't inflate the payout.
+      _lockedRewardPerMinute = difficulty.rewardPerMinute;
     }
     isFocusActive = true;
     isFocusPaused = false;
@@ -523,6 +567,7 @@ class SpiralAppState extends ChangeNotifier {
     bestSessionSeconds = max(bestSessionSeconds, currentSessionSeconds);
     lastFocusResult = result;
     currentSessionSeconds = 0;
+    _lockedRewardPerMinute = null;
     notifyListeners();
     _persistProgress();
     return result;
@@ -533,6 +578,7 @@ class SpiralAppState extends ChangeNotifier {
     isFocusActive = false;
     isFocusPaused = false;
     currentSessionSeconds = 0;
+    _lockedRewardPerMinute = null;
     notifyListeners();
   }
 
@@ -586,19 +632,14 @@ class SpiralAppState extends ChangeNotifier {
     }
 
     final List<GameCharacter> results = <GameCharacter>[];
-    bool batchHasLegendary = false;
     for (int index = 0; index < count; index += 1) {
-      final GameCharacter pulled = _performPull();
-      results.add(pulled);
-      if (pulled.rarity == CharacterRarity.legendary) {
-        batchHasLegendary = true;
-      }
+      results.add(_performPull());
     }
 
-    if (count > 1 && batchHasLegendary) {
-      pityCounter = 0;
-    }
-
+    // _performPull() already resets pityCounter to 0 on every legendary (natural
+    // or pity-guaranteed), so no batch-level reset is needed. A redundant reset
+    // here would wipe pity legitimately earned by pulls after a mid-batch
+    // legendary.
     lastPulledCharacter = results.last;
     lastPulledCharacters = List<GameCharacter>.unmodifiable(results);
     notifyListeners();
@@ -656,7 +697,15 @@ class SpiralAppState extends ChangeNotifier {
       return 0;
     }
 
-    int reward = wholeMinutes * difficulty.rewardPerMinute;
+    // While a session is in progress the lock is set (at session start) and is
+    // cleared when the session ends, so the payout — computed in
+    // finishFocusSession after isFocusActive is already false — still uses the
+    // rate from session start. Outside a session the lock is null and the live
+    // difficulty drives the reward preview.
+    final int rewardPerMinute =
+        _lockedRewardPerMinute ?? difficulty.rewardPerMinute;
+
+    int reward = wholeMinutes * rewardPerMinute;
     if (wholeMinutes >= 20) {
       reward += 15;
     }
@@ -751,25 +800,73 @@ class SpiralAppState extends ChangeNotifier {
     if (user == null) {
       return;
     }
+    // Restore progress from the still-intact local cache before persisting or
+    // reconciling. A prior transient null auth emission clears in-memory
+    // progress via _clearSession but leaves the prefs cache untouched; without
+    // re-reading it here, the _persistLocalCache below would overwrite the good
+    // cache with defaults and the server reconcile would then clobber newer
+    // offline progress. Only re-read when the cache belongs to THIS user: a
+    // session can also end without clearing the cache (token expiry), so a
+    // different account signing in next must not inherit the prior user's
+    // cached progress.
+    try {
+      await _localHydration;
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(_sessionUserIdKey) == user.uid) {
+        await _hydrateProgressFromLocalCache(preferences: prefs);
+      }
+    } catch (_) {
+      // Ignore cache-load failures; fall back to server data.
+    }
     await _persistLocalCache();
     await _loadProgressFromFirebase();
   }
 
-  Future<void> _loadProgressFromFirebase() async {
+  Future<void> _loadProgressFromFirebase() {
     final String? uid = playerId;
     if (!firebaseEnabled || uid == null) {
-      return;
+      return Future<void>.value();
     }
 
-    _isHydratingProgress = true;
+    // Coalesce concurrent loads. On sign-in both login() and the
+    // authStateChanges listener kick off a load; sharing one in-flight fetch
+    // avoids duplicate reads and a non-deterministic last-writer.
+    return _progressLoad ??= _loadProgressFromFirebaseImpl(uid).whenComplete(() {
+      _progressLoad = null;
+    });
+  }
+
+  Future<void> _loadProgressFromFirebaseImpl(String uid) async {
+    // Ensure the local cache (identity + progress + updatedAtClient) is in
+    // memory before reconciling against the server, so newer offline progress
+    // is detected by timestamp instead of being clobbered — even on a cold
+    // start where the session was restored from Firebase auth and the cache
+    // load would otherwise race this fetch.
+    try {
+      await _localHydration;
+    } catch (_) {
+      // Ignore cache-load failures; fall back to server data.
+    }
     try {
       final DocumentSnapshot<Map<String, dynamic>> snapshot =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
       final Map<String, dynamic>? data = snapshot.data();
       if (data == null) {
-        await _persistProgress(force: true);
+        // No server document yet — seed it from current (local) progress.
+        await _persistProgress();
         return;
       }
+
+      // Last-write-wins by client timestamp. If local progress is newer than
+      // this snapshot (earned offline, or mutated while the fetch was in
+      // flight), push local up instead of clobbering it.
+      final int serverUpdatedAt =
+          (data['updatedAtClient'] as num?)?.toInt() ?? 0;
+      if (serverUpdatedAt < _progressUpdatedAt) {
+        await _persistProgress();
+        return;
+      }
+      _progressUpdatedAt = serverUpdatedAt;
 
       final Map<String, dynamic> collectionData =
           (data['collection'] as Map<String, dynamic>?) ?? <String, dynamic>{};
@@ -815,54 +912,74 @@ class SpiralAppState extends ChangeNotifier {
       notifyListeners();
     } on FirebaseException {
       await _hydrateProgressFromLocalCache();
-    } finally {
-      _isHydratingProgress = false;
     }
   }
 
-  Future<void> _persistProgress({bool force = false}) async {
-    await _persistLocalCache();
-    if (_isHydratingProgress && !force) {
-      return;
+  Future<void> _persistProgress() async {
+    // Stamp this save so loads can reconcile local vs server by recency.
+    _progressUpdatedAt = DateTime.now().millisecondsSinceEpoch;
+    try {
+      await _persistLocalCache();
+    } catch (_) {
+      // Local cache is best-effort; ignore storage failures.
     }
     if (!firebaseEnabled || playerId == null) {
       return;
     }
-    await FirebaseFirestore.instance.collection('users').doc(playerId).set({
-      'collection': _collection,
-      'difficulty': difficulty.name,
-      'soundEnabled': soundEnabled,
-      'ambientSoundsEnabled': ambientSoundsEnabled,
-      'hapticsEnabled': hapticsEnabled,
-      'reminderEnabled': reminderEnabled,
-      'sessionBackgroundEnabled': sessionBackgroundEnabled,
-      'dailyTargetMinutes': dailyTargetMinutes,
-      'selectedFocusTarget': selectedFocusTarget,
-      'totalFocusMinutes': totalFocusMinutes,
-      'bestSessionSeconds': bestSessionSeconds,
-      'bits': bits,
-      'totalPulls': totalPulls,
-      'pityCounter': pityCounter,
-      'hasCompletedTutorial': hasCompletedTutorial,
-      'themeMode': themeMode.name,
-      'accentStyle': accentStyle.name,
-      'lastPulledCharacterId': lastPulledCharacter?.id,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(playerId).set(<
+        String,
+        Object?
+      >{
+        'collection': _collection,
+        'difficulty': difficulty.name,
+        'soundEnabled': soundEnabled,
+        'ambientSoundsEnabled': ambientSoundsEnabled,
+        'hapticsEnabled': hapticsEnabled,
+        'reminderEnabled': reminderEnabled,
+        'sessionBackgroundEnabled': sessionBackgroundEnabled,
+        'dailyTargetMinutes': dailyTargetMinutes,
+        'selectedFocusTarget': selectedFocusTarget,
+        'totalFocusMinutes': totalFocusMinutes,
+        'bestSessionSeconds': bestSessionSeconds,
+        'bits': bits,
+        'totalPulls': totalPulls,
+        'pityCounter': pityCounter,
+        'hasCompletedTutorial': hasCompletedTutorial,
+        'themeMode': themeMode.name,
+        'accentStyle': accentStyle.name,
+        'lastPulledCharacterId': lastPulledCharacter?.id,
+        'updatedAtClient': _progressUpdatedAt,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException {
+      // Offline or transient failure. The local cache holds the latest state
+      // and the next successful load reconciles via updatedAtClient.
+    }
   }
 
   Future<void> _hydrateLocalCache() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool hasSession = prefs.getBool(_sessionEnabledKey) ?? false;
+    if (!hasSession) {
+      return;
+    }
 
-    if (hasSession && !isLoggedIn) {
+    if (!isLoggedIn) {
+      // Restore the session identity from cache (offline, or before Firebase
+      // has restored the auth user).
       playerName = prefs.getString(_sessionNameKey) ?? '';
       playerEmail = prefs.getString(_sessionEmailKey) ?? '';
       playerId = prefs.getString(_sessionUserIdKey);
       isLoggedIn = playerEmail.isNotEmpty;
-      await _hydrateProgressFromLocalCache(preferences: prefs);
-      notifyListeners();
     }
+
+    // Always hydrate cached progress (and its updatedAtClient) into memory —
+    // even when Firebase already restored the session on cold start — so the
+    // later server reconcile can detect newer offline progress by timestamp
+    // instead of clobbering it.
+    await _hydrateProgressFromLocalCache(preferences: prefs);
+    notifyListeners();
   }
 
   Future<void> _hydrateProgressFromLocalCache({
@@ -875,7 +992,18 @@ class SpiralAppState extends ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> data = jsonDecode(raw) as Map<String, dynamic>;
+    final Map<String, dynamic> data;
+    try {
+      data = jsonDecode(raw) as Map<String, dynamic>;
+    } catch (_) {
+      // Corrupted or legacy cache payload — discard it and keep defaults
+      // instead of crashing on launch.
+      await prefs.remove(_progressCacheKey);
+      return;
+    }
+
+    _progressUpdatedAt =
+        (data['updatedAtClient'] as num?)?.toInt() ?? _progressUpdatedAt;
     final Map<String, dynamic> collectionData =
         (data['collection'] as Map<String, dynamic>?) ?? <String, dynamic>{};
     _collection
@@ -971,6 +1099,7 @@ class SpiralAppState extends ChangeNotifier {
       'themeMode': themeMode.name,
       'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
+      'updatedAtClient': _progressUpdatedAt,
     };
   }
 
@@ -1045,6 +1174,8 @@ class SpiralAppState extends ChangeNotifier {
     lastPulledCharacters = <GameCharacter>[];
     themeMode = ThemeMode.light;
     accentStyle = AppAccentStyle.mint;
+    _lockedRewardPerMinute = null;
+    _progressUpdatedAt = 0;
   }
 
   AppDifficulty _difficultyFromName(String? value) {
