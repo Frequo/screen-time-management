@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      'Nexi',
+                                      'Focugacha',
                                       style: Theme.of(context)
                                           .textTheme
                                           .headlineMedium
@@ -229,8 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               _isSubmitting
                                   ? 'Connecting...'
                                   : _isCreateAccount
-                                  ? 'Create Nexi account'
-                                  : 'Sign in to Nexi',
+                                  ? 'Create Focugacha account'
+                                  : 'Sign in to Focugacha',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -269,7 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty) {
       setState(() {
-        _errorMessage = 'Enter the email for your Nexi account.';
+        _errorMessage = 'Enter the email for your Focugacha account.';
       });
       return;
     }

@@ -12,8 +12,8 @@ void main() {
   ) async {
     await tester.pumpWidget(MyApp(appState: SpiralAppState()));
 
-    expect(find.text('Nexi'), findsOneWidget);
-    expect(find.text('Sign in to Nexi'), findsOneWidget);
+    expect(find.text('Focugacha'), findsOneWidget);
+    expect(find.text('Sign in to Focugacha'), findsOneWidget);
 
     final SpiralAppState loggedInState = SpiralAppState()
       ..isLoggedIn = true

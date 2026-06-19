@@ -44,7 +44,7 @@ class SettingsScreen extends StatelessWidget {
                             const SizedBox(height: 10),
                             Text(
                               appState.playerName.isEmpty
-                                  ? 'Nexi account'
+                                  ? 'Focugacha account'
                                   : appState.playerName,
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),

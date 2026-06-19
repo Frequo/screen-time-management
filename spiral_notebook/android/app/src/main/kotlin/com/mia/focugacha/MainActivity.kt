@@ -1,4 +1,4 @@
-package com.example.spiral_notebook
+package com.mia.focugacha
 
 import io.flutter.embedding.android.FlutterActivity
 

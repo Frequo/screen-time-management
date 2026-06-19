@@ -89,7 +89,7 @@ class _HomeShellState extends State<HomeShell> {
                           Text(titles[_selectedIndex]),
                           Text(
                             widget.appState.playerName.isEmpty
-                                ? 'Nexi'
+                                ? 'Focugacha'
                                 : 'Welcome back, ${widget.appState.playerName}!',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),

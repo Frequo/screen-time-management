@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAyN8if7JnYNLMPby9UhqcmpExukw9eSyA',
-    appId: '1:154190462867:android:d58919f619975fb6117266',
+    appId: '1:154190462867:android:e27de5df3cbe12e1117266',
     messagingSenderId: '154190462867',
     projectId: 'hydroflask-acdaa',
     storageBucket: 'hydroflask-acdaa.firebasestorage.app',
@@ -59,10 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAAhyMvihLWJX-ZGkiDkzpSfjCIPsIOVAk',
-    appId: '1:154190462867:ios:5d1dda2b34361c5f117266',
+    appId: '1:154190462867:ios:b9ad75684b6a3d50117266',
     messagingSenderId: '154190462867',
     projectId: 'hydroflask-acdaa',
     storageBucket: 'hydroflask-acdaa.firebasestorage.app',
-    iosBundleId: 'com.example.spiralNotebook',
+    iosBundleId: 'com.mia.focugacha',
   );
+
 }

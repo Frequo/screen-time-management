@@ -123,7 +123,7 @@ class _MyAppState extends State<MyApp> {
         );
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Nexi: Study Gacha',
+          title: 'Focugacha: Study Gacha',
           scrollBehavior: const _NoStretchScrollBehavior(),
           themeMode: widget.appState.themeMode,
           theme: ThemeData(
