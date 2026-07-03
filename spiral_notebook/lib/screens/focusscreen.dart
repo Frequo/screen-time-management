@@ -100,7 +100,9 @@ class FocusScreen extends StatelessWidget {
                                   appState.tutorialStep ==
                                       TutorialStep.startFocus
                               ? appState.advanceTutorial
-                              : appState.startFocusSession,
+                              : appState.canStartFocusSession
+                              ? appState.startFocusSession
+                              : null,
                           icon: const Icon(Icons.play_arrow_rounded),
                           label: const Text('Start focus session'),
                         ),
@@ -110,6 +112,8 @@ class FocusScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            _PhoneStandFocusCard(appState: appState),
             const SizedBox(height: 16),
             Card(
               key: tutorialTargets?.focusTargets,
@@ -237,6 +241,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
       builder: (BuildContext context, Widget? child) {
         final SpiralAppState appState = widget.appState;
         final bool paused = appState.isFocusPaused;
+        final bool pausedByStand = appState.isFocusPausedByPhoneStand;
         final int earnedBits = appState.calculateRewardForSeconds(
           appState.currentSessionSeconds,
         );
@@ -319,7 +324,11 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             Text(
-                              paused ? 'Paused' : 'Study session',
+                              pausedByStand
+                                  ? 'Phone lifted'
+                                  : paused
+                                  ? 'Paused'
+                                  : 'Study session',
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
                                     color: Colors.white70,
@@ -341,12 +350,18 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              paused
+                              pausedByStand
+                                  ? 'Return the phone to the stand'
+                                  : paused
                                   ? 'Timer paused'
                                   : '${appState.remainingTargetSeconds ~/ 60} min until target',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(color: Colors.white70),
                             ),
+                            if (appState.isPhoneStandConnected) ...<Widget>[
+                              const SizedBox(height: 12),
+                              _ImmersiveStandStatus(appState: appState),
+                            ],
                             const SizedBox(height: 24),
                             SizedBox(
                               width: 280,
@@ -379,7 +394,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
-                            if (paused) ...<Widget>[
+                            if (paused && !pausedByStand) ...<Widget>[
                               const SizedBox(height: 28),
                               FilledButton.icon(
                                 onPressed: appState.startFocusSession,
@@ -408,6 +423,130 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
           ),
         );
       },
+    );
+  }
+}
+
+class _PhoneStandFocusCard extends StatelessWidget {
+  const _PhoneStandFocusCard({required this.appState});
+
+  final SpiralAppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool connected = appState.isPhoneStandConnected;
+    final bool ready = connected && appState.isPhoneOnStand;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              height: 44,
+              width: 44,
+              decoration: BoxDecoration(
+                color: (ready ? AppPalette.mint : AppPalette.sun).withValues(
+                  alpha: 0.22,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                ready
+                    ? Icons.check_circle_rounded
+                    : connected
+                    ? Icons.phone_disabled_rounded
+                    : Icons.bluetooth_disabled_rounded,
+                color: ready ? AppPalette.mint : AppPalette.tangerine,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    connected
+                        ? ready
+                              ? 'Phone is on the stand'
+                              : 'Put the phone on the stand'
+                        : 'Stand not connected',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    connected
+                        ? 'Hardware focus pauses if the phone is lifted.'
+                        : 'Connect the stand in Settings to use hardware focus.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (connected &&
+                      appState.phoneStandSensorValue != null) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Sensor value ${appState.phoneStandSensorValue}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Connect stand',
+              onPressed: () => Navigator.pushNamed(context, '/connect'),
+              icon: const Icon(Icons.settings_input_component_rounded),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImmersiveStandStatus extends StatelessWidget {
+  const _ImmersiveStandStatus({required this.appState});
+
+  final SpiralAppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool ready = appState.isPhoneOnStand;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              ready ? Icons.check_circle_rounded : Icons.phone_disabled_rounded,
+              color: ready ? AppPalette.mint : AppPalette.sun,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              ready ? 'Phone on stand' : 'Phone off stand',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

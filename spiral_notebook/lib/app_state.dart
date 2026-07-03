@@ -10,6 +10,26 @@ import 'package:spiral_notebook/theme/app_palette.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
 
+enum PhoneStandConnectionStatus {
+  unsupported,
+  disconnected,
+  scanning,
+  connecting,
+  connected,
+  error,
+}
+
+extension PhoneStandConnectionStatusDetails on PhoneStandConnectionStatus {
+  String get label => switch (this) {
+    PhoneStandConnectionStatus.unsupported => 'Bluetooth unavailable',
+    PhoneStandConnectionStatus.disconnected => 'Stand disconnected',
+    PhoneStandConnectionStatus.scanning => 'Scanning for stand',
+    PhoneStandConnectionStatus.connecting => 'Connecting to stand',
+    PhoneStandConnectionStatus.connected => 'Stand connected',
+    PhoneStandConnectionStatus.error => 'Connection issue',
+  };
+}
+
 enum TutorialStep {
   inventoryWelcome,
   bitsBalance,
@@ -218,6 +238,15 @@ class SpiralAppState extends ChangeNotifier {
   bool hasCompletedTutorial = false;
   bool isTutorialActive = false;
   TutorialStep tutorialStep = TutorialStep.inventoryWelcome;
+  PhoneStandConnectionStatus phoneStandConnectionStatus =
+      PhoneStandConnectionStatus.disconnected;
+  bool isPhoneOnStand = false;
+  bool _pausedByPhoneStand = false;
+  int? phoneStandSensorValue;
+  int? phoneStandOnThreshold;
+  int? phoneStandOffThreshold;
+  String phoneStandMessage =
+      'Connect the stand before starting a hardware focus session.';
   FocusSessionResult? lastFocusResult;
   GameCharacter? lastPulledCharacter;
   List<GameCharacter> lastPulledCharacters = <GameCharacter>[];
@@ -254,6 +283,14 @@ class SpiralAppState extends ChangeNotifier {
 
   double get dailyProgress =>
       dailyTargetMinutes == 0 ? 0 : dailyProgressMinutes / dailyTargetMinutes;
+
+  bool get isPhoneStandConnected =>
+      phoneStandConnectionStatus == PhoneStandConnectionStatus.connected;
+
+  bool get isFocusPausedByPhoneStand => _pausedByPhoneStand;
+
+  bool get canStartFocusSession =>
+      !isPhoneStandConnected || isPhoneOnStand || isFocusPaused;
 
   Future<void> login({
     required String email,
@@ -530,6 +567,12 @@ class SpiralAppState extends ChangeNotifier {
       return;
     }
 
+    if (!canStartFocusSession) {
+      phoneStandMessage = 'Put the phone on the stand to start the session.';
+      notifyListeners();
+      return;
+    }
+
     if (!isFocusPaused) {
       currentSessionSeconds = 0;
       // Lock the reward rate to the difficulty chosen when the session begins,
@@ -538,6 +581,7 @@ class SpiralAppState extends ChangeNotifier {
     }
     isFocusActive = true;
     isFocusPaused = false;
+    _pausedByPhoneStand = false;
     notifyListeners();
 
     _focusTicker = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
@@ -554,6 +598,7 @@ class SpiralAppState extends ChangeNotifier {
     _stopTicker();
     isFocusActive = false;
     isFocusPaused = false;
+    _pausedByPhoneStand = false;
 
     final int rewards = calculateRewardForSeconds(currentSessionSeconds);
     final FocusSessionResult result = FocusSessionResult(
@@ -579,10 +624,11 @@ class SpiralAppState extends ChangeNotifier {
     isFocusPaused = false;
     currentSessionSeconds = 0;
     _lockedRewardPerMinute = null;
+    _pausedByPhoneStand = false;
     notifyListeners();
   }
 
-  void pauseFocusSession() {
+  void pauseFocusSession({bool byPhoneStand = false}) {
     if (!isFocusActive) {
       return;
     }
@@ -590,6 +636,77 @@ class SpiralAppState extends ChangeNotifier {
     _stopTicker();
     isFocusActive = true;
     isFocusPaused = true;
+    _pausedByPhoneStand = byPhoneStand;
+    notifyListeners();
+  }
+
+  void updatePhoneStandConnectionStatus(
+    PhoneStandConnectionStatus status, {
+    String? message,
+  }) {
+    final bool wasConnected = isPhoneStandConnected;
+
+    phoneStandConnectionStatus = status;
+    if (message != null) {
+      phoneStandMessage = message;
+    }
+
+    if (status != PhoneStandConnectionStatus.connected) {
+      isPhoneOnStand = false;
+      phoneStandSensorValue = null;
+      if (wasConnected && isFocusActive && !isFocusPaused) {
+        pauseFocusSession(byPhoneStand: true);
+        return;
+      }
+    }
+
+    notifyListeners();
+  }
+
+  void applyPhoneStandMessage(String rawLine) {
+    final String line = rawLine.trim();
+    if (line.isEmpty) {
+      return;
+    }
+
+    final Map<String, String> fields = _parseStandFields(line);
+    bool? phonePresent;
+
+    if (line.startsWith('PHONE_ON')) {
+      phonePresent = true;
+    } else if (line.startsWith('PHONE_OFF')) {
+      phonePresent = false;
+    } else if (line.startsWith('STATE')) {
+      final String? value = fields['phone_present'];
+      if (value != null) {
+        phonePresent = value == '1' || value.toLowerCase() == 'true';
+      }
+    }
+
+    if (phonePresent != null) {
+      isPhoneOnStand = phonePresent;
+    }
+
+    phoneStandSensorValue =
+        int.tryParse(fields['value'] ?? '') ?? phoneStandSensorValue;
+    phoneStandOnThreshold =
+        int.tryParse(fields['on_threshold'] ?? '') ?? phoneStandOnThreshold;
+    phoneStandOffThreshold =
+        int.tryParse(fields['off_threshold'] ?? '') ?? phoneStandOffThreshold;
+    phoneStandMessage = line;
+
+    if (isPhoneStandConnected && phonePresent != null) {
+      if (!phonePresent && isFocusActive && !isFocusPaused) {
+        pauseFocusSession(byPhoneStand: true);
+        return;
+      }
+
+      if (phonePresent && isFocusPaused && _pausedByPhoneStand) {
+        startFocusSession();
+        return;
+      }
+    }
+
     notifyListeners();
   }
 
@@ -737,6 +854,20 @@ class SpiralAppState extends ChangeNotifier {
   void _stopTicker() {
     _focusTicker?.cancel();
     _focusTicker = null;
+  }
+
+  Map<String, String> _parseStandFields(String line) {
+    final Map<String, String> fields = <String, String>{};
+    for (final String part in line.split(',')) {
+      final int separator = part.indexOf('=');
+      if (separator <= 0 || separator == part.length - 1) {
+        continue;
+      }
+      fields[part.substring(0, separator).trim()] = part
+          .substring(separator + 1)
+          .trim();
+    }
+    return fields;
   }
 
   void _applyLocalLogin(String name, String email) {

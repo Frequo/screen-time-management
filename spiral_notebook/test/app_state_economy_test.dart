@@ -46,6 +46,31 @@ void main() {
     expect(appState.currentRewardPreview, 220);
   });
 
+  test('phone stand removal pauses and replacement resumes a session', () {
+    final SpiralAppState appState = SpiralAppState();
+    addTearDown(appState.dispose);
+
+    appState.updatePhoneStandConnectionStatus(
+      PhoneStandConnectionStatus.connected,
+    );
+    appState.applyPhoneStandMessage('STATE,phone_present=1,value=12000');
+    appState.startFocusSession();
+    appState.currentSessionSeconds = 90;
+
+    appState.applyPhoneStandMessage('PHONE_OFF,value=1000');
+
+    expect(appState.isFocusActive, isTrue);
+    expect(appState.isFocusPaused, isTrue);
+    expect(appState.isFocusPausedByPhoneStand, isTrue);
+
+    appState.applyPhoneStandMessage('PHONE_ON,value=13000');
+
+    expect(appState.isFocusActive, isTrue);
+    expect(appState.isFocusPaused, isFalse);
+    expect(appState.isFocusPausedByPhoneStand, isFalse);
+    expect(appState.currentSessionSeconds, 90);
+  });
+
   test('a guaranteed (pity) legendary resets the pity counter to zero', () {
     final SpiralAppState appState = SpiralAppState();
     addTearDown(appState.dispose);

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
+import 'package:spiral_notebook/services/phone_stand_ble.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/app_bar_settings_action.dart';
 
 class ConnectStandScreen extends StatelessWidget {
-  const ConnectStandScreen({super.key, required this.appState});
+  const ConnectStandScreen({
+    super.key,
+    required this.appState,
+    this.phoneStandController,
+  });
 
   final SpiralAppState appState;
-
-  static const String deviceName = 'FSR Phone';
-  static const String serviceName = 'Nordic UART BLE service';
+  final PhoneStandBleController? phoneStandController;
 
   @override
   Widget build(BuildContext context) {
@@ -20,190 +23,258 @@ class ConnectStandScreen extends StatelessWidget {
         title: const Text('Connect stand'),
         actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
       ),
-      body: ColoredBox(
-        color: theme.scaffoldBackgroundColor,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppPalette.mint, width: 2),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
+      body: AnimatedBuilder(
+        animation: Listenable.merge(<Listenable>[
+          appState,
+          ?phoneStandController,
+        ]),
+        builder: (BuildContext context, Widget? child) {
+          final PhoneStandConnectionStatus status =
+              appState.phoneStandConnectionStatus;
+          final bool connected = appState.isPhoneStandConnected;
+          final bool busy = phoneStandController?.isBusy ?? false;
+          final bool canControl = phoneStandController != null && !busy;
+
+          return ColoredBox(
+            color: theme.scaffoldBackgroundColor,
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: connected && appState.isPhoneOnStand
+                          ? AppPalette.mint
+                          : theme.colorScheme.outline,
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Container(
-                        height: 56,
-                        width: 56,
-                        decoration: BoxDecoration(
-                          color: AppPalette.mint.withValues(alpha: 0.18),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.sensors_rounded,
-                          color: AppPalette.mint,
-                          size: 30,
-                        ),
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            height: 56,
+                            width: 56,
+                            decoration: BoxDecoration(
+                              color: _statusColor(
+                                appState,
+                              ).withValues(alpha: 0.18),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _statusIcon(appState),
+                              color: _statusColor(appState),
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  PhoneStandBleController.deviceName,
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  status.label,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              deviceName,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                      const SizedBox(height: 18),
+                      Text(
+                        _standPrompt(appState),
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 18),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: <Widget>[
+                          FilledButton.icon(
+                            onPressed: canControl && !connected
+                                ? phoneStandController!.connect
+                                : null,
+                            icon: busy
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.bluetooth_searching_rounded),
+                            label: Text(
+                              busy
+                                  ? 'Working'
+                                  : connected
+                                  ? 'Connected'
+                                  : 'Connect stand',
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Phone stand sensor',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: canControl && connected
+                                ? phoneStandController!.requestStatus
+                                : null,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Status'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: canControl && connected
+                                ? phoneStandController!.calibrate
+                                : null,
+                            icon: const Icon(Icons.speed_rounded),
+                            label: const Text('Calibrate'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: canControl && connected
+                                ? phoneStandController!.disconnect
+                                : null,
+                            icon: const Icon(Icons.link_off_rounded),
+                            label: const Text('Disconnect'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'The hardware advertises as FSR Phone and reports whether the phone is resting on the force sensor.',
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: null,
-                          icon: const Icon(Icons.bluetooth_searching_rounded),
-                          label: const Text('Scan coming soon'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'BLE transport is not enabled in this Flutter build yet. This screen is wired for the CircuitPython protocol so the Bluetooth layer can plug in here.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Device protocol',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const _ProtocolRow(
-                      label: 'BLE name',
-                      value: deviceName,
-                      icon: Icons.bluetooth_rounded,
-                    ),
-                    const _ProtocolRow(
-                      label: 'Service',
-                      value: serviceName,
-                      icon: Icons.settings_input_component_rounded,
-                    ),
-                    const _ProtocolRow(
-                      label: 'Status command',
-                      value: 'status',
-                      icon: Icons.help_outline_rounded,
-                    ),
-                    const _ProtocolRow(
-                      label: 'Calibrate command',
-                      value: 'calibrate',
-                      icon: Icons.speed_rounded,
-                    ),
-                  ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Messages from stand',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: const <Widget>[
-                        _MessageChip(label: 'PHONE_ON'),
-                        _MessageChip(label: 'PHONE_OFF'),
-                        _MessageChip(label: 'STATE'),
-                        _MessageChip(label: 'CALIBRATED'),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Live sensor',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _ProtocolRow(
+                          label: 'Phone',
+                          value: appState.isPhoneOnStand
+                              ? 'On stand'
+                              : 'Off stand',
+                          icon: appState.isPhoneOnStand
+                              ? Icons.phone_android_rounded
+                              : Icons.phone_disabled_rounded,
+                        ),
+                        _ProtocolRow(
+                          label: 'Value',
+                          value:
+                              appState.phoneStandSensorValue?.toString() ??
+                              'Waiting',
+                          icon: Icons.sensors_rounded,
+                        ),
+                        _ProtocolRow(
+                          label: 'On threshold',
+                          value:
+                              appState.phoneStandOnThreshold?.toString() ??
+                              'Waiting',
+                          icon: Icons.arrow_upward_rounded,
+                        ),
+                        _ProtocolRow(
+                          label: 'Off threshold',
+                          value:
+                              appState.phoneStandOffThreshold?.toString() ??
+                              'Waiting',
+                          icon: Icons.arrow_downward_rounded,
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          appState.phoneStandMessage,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'STATE messages include phone_present, the current analog value, and the on/off thresholds.',
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Setup checklist',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Focus behavior',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const _ChecklistItem(
+                          text:
+                              'Start the session after the stand says the phone is on it.',
+                        ),
+                        const _ChecklistItem(
+                          text:
+                              'The timer pauses automatically if the phone is lifted.',
+                        ),
+                        const _ChecklistItem(
+                          text:
+                              'Put the phone back on the stand to resume the timer.',
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const _ChecklistItem(
-                      text: 'Flash hardware/main.py to the QT Py ESP32-S3.',
-                    ),
-                    const _ChecklistItem(
-                      text: 'Boot the board with the phone off the FSR.',
-                    ),
-                    const _ChecklistItem(
-                      text: 'Wait for calibration, then place the phone down.',
-                    ),
-                    const _ChecklistItem(
-                      text: 'Pair with the advertised FSR Phone device.',
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+}
+
+Color _statusColor(SpiralAppState appState) {
+  if (appState.isPhoneStandConnected && appState.isPhoneOnStand) {
+    return AppPalette.mint;
+  }
+  if (appState.phoneStandConnectionStatus == PhoneStandConnectionStatus.error) {
+    return AppPalette.tangerine;
+  }
+  if (appState.isPhoneStandConnected) {
+    return AppPalette.sun;
+  }
+  return AppPalette.sky;
+}
+
+IconData _statusIcon(SpiralAppState appState) {
+  if (appState.isPhoneStandConnected && appState.isPhoneOnStand) {
+    return Icons.check_circle_rounded;
+  }
+  if (appState.isPhoneStandConnected) {
+    return Icons.phone_disabled_rounded;
+  }
+  return Icons.bluetooth_rounded;
+}
+
+String _standPrompt(SpiralAppState appState) {
+  if (appState.isPhoneStandConnected && appState.isPhoneOnStand) {
+    return 'The phone is on the stand. Focus sessions can run.';
+  }
+  if (appState.isPhoneStandConnected) {
+    return 'Place the phone on the stand before starting a focus session.';
+  }
+  return 'Connect the BLE stand to make focus sessions depend on the phone staying put.';
 }
 
 class _ProtocolRow extends StatelessWidget {
@@ -234,23 +305,15 @@ class _ProtocolRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(value, style: Theme.of(context).textTheme.bodyMedium),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
-    );
-  }
-}
-
-class _MessageChip extends StatelessWidget {
-  const _MessageChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: const Icon(Icons.terminal_rounded, size: 18),
-      label: Text(label),
     );
   }
 }

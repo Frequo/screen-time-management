@@ -83,3 +83,10 @@ Checklist:
 6/4/26
 - Tutorial Issues: laggy, still able to scroll when you shouldn't, boots to the login screen when it shouldn't, 
 - Switch Account no working
+
+
+Forest-Like mechanics:
+- the mascot (Lexi), every time the user closes the app during the focus session, will get progressively angrier and angrier
+- Stages of Anger: side-eye, suspicious, annoyed, angry, super angry, crashout
+- once the mascot (Lexi) gets angry enough, they will crash out and steal some bits from the user.
+- anger state restarts at the beginning of each session

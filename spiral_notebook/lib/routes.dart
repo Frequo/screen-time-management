@@ -7,11 +7,13 @@ import 'package:spiral_notebook/screens/homeshell.dart';
 import 'package:spiral_notebook/screens/infoscreen.dart';
 import 'package:spiral_notebook/screens/loginscreen.dart';
 import 'package:spiral_notebook/screens/settingscreen.dart';
+import 'package:spiral_notebook/services/phone_stand_ble.dart';
 
 Route<dynamic> onGenerateAppRoute(
   RouteSettings settings,
-  SpiralAppState appState,
-) {
+  SpiralAppState appState, {
+  PhoneStandBleController? phoneStandController,
+}) {
   switch (settings.name) {
     case '/':
       return _buildRoute(
@@ -31,7 +33,10 @@ Route<dynamic> onGenerateAppRoute(
       );
     case '/connect':
       return _buildRoute(
-        ConnectStandScreen(appState: appState),
+        ConnectStandScreen(
+          appState: appState,
+          phoneStandController: phoneStandController,
+        ),
         settings: settings,
       );
     case '/info':

@@ -6,6 +6,7 @@ import 'package:spiral_notebook/routes.dart';
 import 'package:spiral_notebook/screens/homeshell.dart';
 import 'package:spiral_notebook/screens/loginscreen.dart';
 import 'package:spiral_notebook/services/focus_ambient_audio.dart';
+import 'package:spiral_notebook/services/phone_stand_ble.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 
 Future<void> main() async {
@@ -51,6 +52,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final FocusAmbientAudioController _focusAmbientAudioController;
+  late final PhoneStandBleController _phoneStandBleController;
 
   Color _backgroundFromAccent(Color accent, Brightness brightness) {
     final HSLColor hsl = HSLColor.fromColor(accent);
@@ -85,12 +87,16 @@ class _MyAppState extends State<MyApp> {
     _focusAmbientAudioController = FocusAmbientAudioController(
       appState: widget.appState,
     );
+    _phoneStandBleController = PhoneStandBleController(
+      appState: widget.appState,
+    );
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    _phoneStandBleController.dispose();
     _focusAmbientAudioController.dispose();
     widget.appState.dispose();
     super.dispose();
@@ -361,8 +367,11 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           home: _AuthGate(appState: widget.appState),
-          onGenerateRoute: (RouteSettings settings) =>
-              onGenerateAppRoute(settings, widget.appState),
+          onGenerateRoute: (RouteSettings settings) => onGenerateAppRoute(
+            settings,
+            widget.appState,
+            phoneStandController: _phoneStandBleController,
+          ),
         );
       },
     );
