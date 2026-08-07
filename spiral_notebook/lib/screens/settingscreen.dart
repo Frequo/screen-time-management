@@ -280,7 +280,7 @@ class SettingsScreen extends StatelessWidget {
                         onChanged: appState.setReminderEnabled,
                         title: const Text('Stand reminders'),
                         subtitle: const Text(
-                          'Keep reminding me to place the phone on the stand.',
+                          'Show the phone-stand prompt on the Focus tab. Sessions still pause when the phone leaves the stand.',
                         ),
                       ),
                     ),
@@ -298,7 +298,7 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Use this to tune how much focus time feels like a full day.',
+                              'Sets the goal tracked on the Inventory tab and in focus history.',
                             ),
                             Slider(
                               min: 30,
@@ -308,6 +308,38 @@ class SettingsScreen extends StatelessWidget {
                               value: appState.dailyTargetMinutes.toDouble(),
                               onChanged: (double value) =>
                                   appState.setDailyTarget(value.round()),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                minHeight: 10,
+                                value: appState.dailyProgress,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.10),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Today: ${appState.todayFocusMinutes} of ${appState.dailyTargetMinutes} min',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: () =>
+                                    Navigator.pushNamed(context, '/history'),
+                                icon: const Icon(Icons.insights_rounded),
+                                label: const Text('View focus history'),
+                              ),
                             ),
                           ],
                         ),

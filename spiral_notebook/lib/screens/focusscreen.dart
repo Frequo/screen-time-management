@@ -112,8 +112,15 @@ class FocusScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            _PhoneStandFocusCard(appState: appState),
+            // Gated by the "Stand reminders" setting: this card is the prompt
+            // to connect the stand / put the phone down. Turning reminders off
+            // hides the nag, not the hardware behaviour — sessions still pause
+            // when the phone leaves the stand, and Settings still links to
+            // pairing.
+            if (appState.reminderEnabled) ...<Widget>[
+              const SizedBox(height: 16),
+              _PhoneStandFocusCard(appState: appState),
+            ],
             const SizedBox(height: 16),
             Card(
               key: tutorialTargets?.focusTargets,
@@ -193,6 +200,16 @@ class FocusScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         '${appState.lastFocusResult!.wholeMinutes} minutes completed for ${appState.lastFocusResult!.rewardsEarned} bits.',
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/history'),
+                          icon: const Icon(Icons.insights_rounded),
+                          label: const Text('View focus history'),
+                        ),
                       ),
                     ],
                   ),
@@ -783,9 +800,16 @@ void _finishSession(BuildContext context, SpiralAppState appState) {
     return;
   }
 
+  // Read the post-session stats once, and hold the outer navigator so the
+  // "View history" action still has a live one after the sheet pops itself.
+  final NavigatorState navigator = Navigator.of(context);
+  final int streakDays = appState.currentStreakDays;
+  final bool targetMet = appState.isDailyTargetMet;
+  final int remaining = appState.dailyMinutesRemaining;
+
   showModalBottomSheet<void>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (BuildContext sheetContext) {
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -795,7 +819,7 @@ void _finishSession(BuildContext context, SpiralAppState appState) {
             children: <Widget>[
               Text(
                 result.label,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -803,12 +827,33 @@ void _finishSession(BuildContext context, SpiralAppState appState) {
               Text(
                 'You stayed focused for ${result.wholeMinutes} minutes and earned ${result.rewardsEarned} bits.',
               ),
+              if (result.wholeMinutes > 0) ...<Widget>[
+                const SizedBox(height: 12),
+                Text(
+                  targetMet
+                      ? 'Daily target reached${streakDays > 1 ? ' — $streakDays day streak.' : '.'}'
+                      : '${appState.minutesLabel(remaining)} left to hit today’s target.',
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Row(
                 children: <Widget>[
                   Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        navigator.pushNamed('/history');
+                      },
+                      child: const Text('View history'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(sheetContext),
                       child: const Text('Back to focus'),
                     ),
                   ),

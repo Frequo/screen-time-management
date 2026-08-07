@@ -1,1 +1,33 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"hydroflask-acdaa","appId":"1:154190462867:android:e27de5df3cbe12e1117266","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"hydroflask-acdaa","appId":"1:154190462867:ios:b9ad75684b6a3d50117266","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"hydroflask-acdaa","configurations":{"android":"1:154190462867:android:e27de5df3cbe12e1117266","ios":"1:154190462867:ios:b9ad75684b6a3d50117266"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hydroflask-acdaa",
+          "appId": "1:154190462867:android:e27de5df3cbe12e1117266",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "hydroflask-acdaa",
+          "appId": "1:154190462867:ios:b9ad75684b6a3d50117266",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hydroflask-acdaa",
+          "configurations": {
+            "android": "1:154190462867:android:e27de5df3cbe12e1117266",
+            "ios": "1:154190462867:ios:b9ad75684b6a3d50117266"
+          }
+        }
+      }
+    }
+  }
+}

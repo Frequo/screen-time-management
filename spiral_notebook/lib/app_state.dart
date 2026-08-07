@@ -164,6 +164,77 @@ class FocusSessionResult {
   int get wholeMinutes => seconds ~/ 60;
 }
 
+/// One completed focus session, kept in [SpiralAppState.sessionHistory] so the
+/// app can show streaks, daily progress, and a per-session log instead of only
+/// lifetime totals.
+class FocusSessionRecord {
+  const FocusSessionRecord({
+    required this.completedAt,
+    required this.seconds,
+    required this.bitsEarned,
+    required this.difficulty,
+    required this.targetMinutes,
+    required this.label,
+  });
+
+  final DateTime completedAt;
+  final int seconds;
+  final int bitsEarned;
+  final AppDifficulty difficulty;
+  final int targetMinutes;
+  final String label;
+
+  int get wholeMinutes => seconds ~/ 60;
+
+  /// True when the session ran at least as long as the target picked for it.
+  bool get metTarget => targetMinutes > 0 && wholeMinutes >= targetMinutes;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'completedAt': completedAt.millisecondsSinceEpoch,
+      'seconds': seconds,
+      'bitsEarned': bitsEarned,
+      'difficulty': difficulty.name,
+      'targetMinutes': targetMinutes,
+      'label': label,
+    };
+  }
+
+  /// Returns null for entries that are missing or malformed, so one bad row in
+  /// a cached/synced payload can't take down the whole history.
+  static FocusSessionRecord? fromJson(Object? value) {
+    if (value is! Map) {
+      return null;
+    }
+
+    final int? millis = (value['completedAt'] as num?)?.toInt();
+    final int? seconds = (value['seconds'] as num?)?.toInt();
+    if (millis == null || seconds == null || seconds < 0) {
+      return null;
+    }
+
+    return FocusSessionRecord(
+      completedAt: DateTime.fromMillisecondsSinceEpoch(millis),
+      seconds: seconds,
+      bitsEarned: (value['bitsEarned'] as num?)?.toInt() ?? 0,
+      difficulty: AppDifficulty.values.firstWhere(
+        (AppDifficulty difficulty) => difficulty.name == value['difficulty'],
+        orElse: () => AppDifficulty.highSchool,
+      ),
+      targetMinutes: (value['targetMinutes'] as num?)?.toInt() ?? 0,
+      label: value['label'] as String? ?? '',
+    );
+  }
+}
+
+/// Focus minutes for a single calendar day, used by the history chart.
+class DailyFocusTotal {
+  const DailyFocusTotal({required this.date, required this.minutes});
+
+  final DateTime date;
+  final int minutes;
+}
+
 class SpiralAppState extends ChangeNotifier {
   SpiralAppState({this.firebaseEnabled = false}) {
     // Keep a handle to the local-cache load so the Firebase reconcile can wait
@@ -187,6 +258,12 @@ class SpiralAppState extends ChangeNotifier {
   static const int pullCost = 100;
   static const int pityLimit = 100;
   static const List<int> focusTargets = <int>[10, 25, 45, 60];
+
+  /// Newest-first cap on [sessionHistory]. Keeps the Firestore document and the
+  /// SharedPreferences payload small; lifetime aggregates (totalFocusMinutes,
+  /// bestSessionSeconds) are stored separately and are not derived from this.
+  static const int sessionHistoryLimit = 120;
+
   static const String _sessionEmailKey = 'session.email';
   static const String _sessionNameKey = 'session.name';
   static const String _sessionUserIdKey = 'session.userId';
@@ -196,7 +273,13 @@ class SpiralAppState extends ChangeNotifier {
   final Random _random = Random();
   final List<GameCharacter> roster = _characterRoster;
   final Map<String, int> _collection = <String, int>{};
+  final List<FocusSessionRecord> _sessionHistory = <FocusSessionRecord>[];
   final bool firebaseEnabled;
+
+  /// Injection point for the "now" used to stamp sessions and to bucket them
+  /// into calendar days, so streak and daily-total logic is testable.
+  @visibleForTesting
+  DateTime Function() clock = DateTime.now;
 
   StreamSubscription<User?>? _authSubscription;
   Timer? _focusTicker;
@@ -279,10 +362,124 @@ class SpiralAppState extends ChangeNotifier {
   int get remainingTargetSeconds =>
       max(0, selectedFocusTarget * 60 - currentSessionSeconds);
 
-  int get dailyProgressMinutes => min(totalFocusMinutes, dailyTargetMinutes);
+  /// Completed sessions, newest first.
+  List<FocusSessionRecord> get sessionHistory =>
+      List<FocusSessionRecord>.unmodifiable(_sessionHistory);
 
-  double get dailyProgress =>
-      dailyTargetMinutes == 0 ? 0 : dailyProgressMinutes / dailyTargetMinutes;
+  int get loggedSessionCount => _sessionHistory.length;
+
+  /// Midnight of the current calendar day. The UI reads "today" from here so
+  /// the widgets and the stats below can never disagree about the date.
+  DateTime get todayDate => _dayKey(clock());
+
+  /// Focus minutes recorded so far on the current calendar day.
+  int get todayFocusMinutes {
+    final DateTime today = todayDate;
+    return _sessionHistory
+        .where(
+          (FocusSessionRecord record) => _dayKey(record.completedAt) == today,
+        )
+        .fold<int>(
+          0,
+          (int total, FocusSessionRecord record) => total + record.wholeMinutes,
+        );
+  }
+
+  int get dailyProgressMinutes => min(todayFocusMinutes, dailyTargetMinutes);
+
+  double get dailyProgress => dailyTargetMinutes == 0
+      ? 0
+      : (todayFocusMinutes / dailyTargetMinutes).clamp(0, 1).toDouble();
+
+  bool get isDailyTargetMet => todayFocusMinutes >= dailyTargetMinutes;
+
+  int get dailyMinutesRemaining => max(0, dailyTargetMinutes - todayFocusMinutes);
+
+  /// Consecutive calendar days ending today (or yesterday, if today has no
+  /// session yet) on which at least one session was recorded.
+  int get currentStreakDays {
+    final Set<DateTime> days = _focusDays();
+    if (days.isEmpty) {
+      return 0;
+    }
+
+    final DateTime today = todayDate;
+    DateTime cursor = today;
+    if (!days.contains(cursor)) {
+      // Today isn't logged yet — an unbroken run through yesterday still
+      // counts, so the streak doesn't visibly reset every morning.
+      cursor = _previousDay(today);
+      if (!days.contains(cursor)) {
+        return 0;
+      }
+    }
+
+    int streak = 0;
+    while (days.contains(cursor)) {
+      streak += 1;
+      cursor = _previousDay(cursor);
+    }
+    return streak;
+  }
+
+  int get longestStreakDays {
+    final List<DateTime> days = _focusDays().toList(growable: false)..sort();
+    if (days.isEmpty) {
+      return 0;
+    }
+
+    int longest = 1;
+    int running = 1;
+    for (int i = 1; i < days.length; i += 1) {
+      if (days[i] == _nextDay(days[i - 1])) {
+        running += 1;
+        longest = max(longest, running);
+      } else {
+        running = 1;
+      }
+    }
+    return longest;
+  }
+
+  /// Focus minutes per day for the [days]-day window ending today, oldest
+  /// first. Days with no sessions are included with zero minutes so the chart
+  /// keeps a stable width.
+  List<DailyFocusTotal> recentDailyTotals({int days = 7}) {
+    final Map<DateTime, int> minutesByDay = <DateTime, int>{};
+    for (final FocusSessionRecord record in _sessionHistory) {
+      final DateTime day = _dayKey(record.completedAt);
+      minutesByDay[day] = (minutesByDay[day] ?? 0) + record.wholeMinutes;
+    }
+
+    final DateTime today = todayDate;
+    return List<DailyFocusTotal>.generate(days, (int index) {
+      final DateTime day = DateTime(
+        today.year,
+        today.month,
+        today.day - (days - 1 - index),
+      );
+      return DailyFocusTotal(date: day, minutes: minutesByDay[day] ?? 0);
+    }, growable: false);
+  }
+
+  Set<DateTime> _focusDays() {
+    return _sessionHistory
+        .map((FocusSessionRecord record) => _dayKey(record.completedAt))
+        .toSet();
+  }
+
+  // Day arithmetic goes through the DateTime constructor rather than
+  // Duration(days: 1): adding a fixed 24 hours across a DST boundary lands on
+  // 23:00 or 01:00 of the neighbouring day, which would never compare equal to
+  // a midnight day key.
+  static DateTime _dayKey(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  static DateTime _previousDay(DateTime day) =>
+      DateTime(day.year, day.month, day.day - 1);
+
+  static DateTime _nextDay(DateTime day) =>
+      DateTime(day.year, day.month, day.day + 1);
 
   bool get isPhoneStandConnected =>
       phoneStandConnectionStatus == PhoneStandConnectionStatus.connected;
@@ -611,6 +808,26 @@ class SpiralAppState extends ChangeNotifier {
     totalFocusMinutes += currentSessionSeconds ~/ 60;
     bestSessionSeconds = max(bestSessionSeconds, currentSessionSeconds);
     lastFocusResult = result;
+
+    // Sessions shorter than a minute earn nothing and would otherwise pad the
+    // log (and light up a streak day) without representing real focus time.
+    if (result.wholeMinutes > 0) {
+      _sessionHistory.insert(
+        0,
+        FocusSessionRecord(
+          completedAt: clock(),
+          seconds: result.seconds,
+          bitsEarned: rewards,
+          difficulty: difficulty,
+          targetMinutes: selectedFocusTarget,
+          label: result.label,
+        ),
+      );
+      if (_sessionHistory.length > sessionHistoryLimit) {
+        _sessionHistory.removeRange(sessionHistoryLimit, _sessionHistory.length);
+      }
+    }
+
     currentSessionSeconds = 0;
     _lockedRewardPerMinute = null;
     notifyListeners();
@@ -1039,6 +1256,7 @@ class SpiralAppState extends ChangeNotifier {
       lastPulledCharacter = findCharacterById(
         data['lastPulledCharacterId'] as String? ?? '',
       );
+      _applySessionHistoryData(data['sessionHistory']);
       await _persistLocalCache();
       notifyListeners();
     } on FirebaseException {
@@ -1080,6 +1298,7 @@ class SpiralAppState extends ChangeNotifier {
         'themeMode': themeMode.name,
         'accentStyle': accentStyle.name,
         'lastPulledCharacterId': lastPulledCharacter?.id,
+        'sessionHistory': _sessionHistoryData(),
         'updatedAtClient': _progressUpdatedAt,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -1175,8 +1394,36 @@ class SpiralAppState extends ChangeNotifier {
     lastPulledCharacter = findCharacterById(
       data['lastPulledCharacterId'] as String? ?? '',
     );
+    _applySessionHistoryData(data['sessionHistory']);
     lastFocusResult = null;
     lastPulledCharacters = <GameCharacter>[];
+  }
+
+  List<Map<String, Object?>> _sessionHistoryData() {
+    return _sessionHistory
+        .map((FocusSessionRecord record) => record.toJson())
+        .toList(growable: false);
+  }
+
+  void _applySessionHistoryData(Object? value) {
+    if (value is! List) {
+      return;
+    }
+
+    final List<FocusSessionRecord> parsed = value
+        .map(FocusSessionRecord.fromJson)
+        .whereType<FocusSessionRecord>()
+        .toList();
+    // Sort defensively: the stored order should already be newest-first, but a
+    // hand-edited or merged document shouldn't scramble the log or the cap.
+    parsed.sort(
+      (FocusSessionRecord a, FocusSessionRecord b) =>
+          b.completedAt.compareTo(a.completedAt),
+    );
+
+    _sessionHistory
+      ..clear()
+      ..addAll(parsed.take(sessionHistoryLimit));
   }
 
   Future<void> _persistLocalCache() async {
@@ -1230,6 +1477,7 @@ class SpiralAppState extends ChangeNotifier {
       'themeMode': themeMode.name,
       'accentStyle': accentStyle.name,
       'lastPulledCharacterId': lastPulledCharacter?.id,
+      'sessionHistory': _sessionHistoryData(),
       'updatedAtClient': _progressUpdatedAt,
     };
   }
@@ -1281,6 +1529,7 @@ class SpiralAppState extends ChangeNotifier {
 
   void _resetProgress() {
     _collection.clear();
+    _sessionHistory.clear();
     difficulty = AppDifficulty.highSchool;
     soundEnabled = true;
     ambientSoundsEnabled = true;

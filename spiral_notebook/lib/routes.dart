@@ -3,6 +3,7 @@ import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
 import 'package:spiral_notebook/screens/connectscreen.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
+import 'package:spiral_notebook/screens/historyscreen.dart';
 import 'package:spiral_notebook/screens/homeshell.dart';
 import 'package:spiral_notebook/screens/infoscreen.dart';
 import 'package:spiral_notebook/screens/loginscreen.dart';
@@ -41,6 +42,8 @@ Route<dynamic> onGenerateAppRoute(
       );
     case '/info':
       return _buildRoute(InfoScreen(appState: appState), settings: settings);
+    case '/history':
+      return _buildRoute(HistoryScreen(appState: appState), settings: settings);
     case '/characters':
       return _buildRoute(
         CharacterCollectionScreen(appState: appState),

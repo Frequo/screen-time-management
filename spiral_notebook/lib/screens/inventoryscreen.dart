@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/characterview.dart';
+import 'package:spiral_notebook/screens/historyscreen.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/difficulty_selector_card.dart';
 import 'package:spiral_notebook/widgets/tutorial_overlay.dart';
@@ -30,6 +31,12 @@ class InventoryScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
           children: <Widget>[
             _HeroCard(appState: appState, tutorialTargets: tutorialTargets),
+            const SizedBox(height: 16),
+            DailyProgressCard(
+              appState: appState,
+              showStreak: true,
+              onTap: () => Navigator.pushNamed(context, '/history'),
+            ),
             const SizedBox(height: 16),
             DifficultySelectorCard(
               key: tutorialTargets?.difficulty,
@@ -106,6 +113,19 @@ class InventoryScreen extends StatelessWidget {
                             onPressed: onOpenGacha,
                             icon: const Icon(Icons.auto_awesome),
                             label: const Text('Spend bits in gacha'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/history'),
+                            icon: const Icon(Icons.insights_rounded),
+                            label: const Text('View focus history'),
                           ),
                         ),
                       ],
