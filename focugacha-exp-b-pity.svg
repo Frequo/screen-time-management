@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="430" viewBox="0 0 660 430" font-family="'Helvetica Neue', Arial, Helvetica, sans-serif" role="img">
+  <title>Distribution of pulls required to obtain a Legendary</title>
+  <desc>Histogram of pulls-to-Legendary in ten buckets. 1-10: 9,497 runs. 11-20: 8,482. 21-30: 7,855. 31-40: 7,125. 41-50: 6,533. 51-60: 5,771. 61-70: 5,162. 71-80: 4,729. 81-90: 4,295. 91-100: 40,551, of which 37,123 landed on exactly 100 pulls and were resolved by the pity guarantee. No run exceeded 100 pulls.</desc>
+  <rect x="0" y="0" width="660" height="430" fill="#ffffff"/>
+  <text x="24" y="30" font-size="15" font-weight="600" fill="#0b0b0b">Distribution of pulls required to obtain a Legendary</text>
+  <text x="24" y="50" font-size="11.5" fill="#52514e">100,000 simulated runs; the pity counter guarantees a Legendary on the 100th pull</text>
+  <rect x="24" y="64" width="10" height="10" rx="2" fill="#2a78d6"/>
+  <text x="40" y="72" font-size="11.5" fill="#52514e">Legendary pulled naturally</text>
+  <rect x="225.9" y="64" width="10" height="10" rx="2" fill="#eb6834"/>
+  <text x="241.9" y="72" font-size="11.5" fill="#52514e">Resolved by the 100-pull pity cap</text>
+  <line x1="62" y1="352.0" x2="640" y2="352.0" stroke="#e1e0d9" stroke-width="1"/>
+  <text x="52" y="356.0" font-size="11" fill="#898781" text-anchor="end">0</text>
+  <line x1="62" y1="290.1" x2="640" y2="290.1" stroke="#e1e0d9" stroke-width="1"/>
+  <text x="52" y="294.1" font-size="11" fill="#898781" text-anchor="end">10,000</text>
+  <line x1="62" y1="228.2" x2="640" y2="228.2" stroke="#e1e0d9" stroke-width="1"/>
+  <text x="52" y="232.2" font-size="11" fill="#898781" text-anchor="end">20,000</text>
+  <line x1="62" y1="166.3" x2="640" y2="166.3" stroke="#e1e0d9" stroke-width="1"/>
+  <text x="52" y="170.3" font-size="11" fill="#898781" text-anchor="end">30,000</text>
+  <line x1="62" y1="104.4" x2="640" y2="104.4" stroke="#e1e0d9" stroke-width="1"/>
+  <text x="52" y="108.4" font-size="11" fill="#898781" text-anchor="end">40,000</text>
+  <line x1="62" y1="352" x2="640" y2="352" stroke="#c3c2b7" stroke-width="1"/>
+  <path d="M78.9,352.0 L78.9,297.2 Q78.9,293.2 82.9,293.2 L98.9,293.2 Q102.9,293.2 102.9,297.2 L102.9,352.0 Z" fill="#2a78d6"/>
+  <text x="90.9" y="372" font-size="11" fill="#52514e" text-anchor="middle">1-10</text>
+  <path d="M136.7,352.0 L136.7,303.5 Q136.7,299.5 140.7,299.5 L156.7,299.5 Q160.7,299.5 160.7,303.5 L160.7,352.0 Z" fill="#2a78d6"/>
+  <text x="148.7" y="372" font-size="11" fill="#52514e" text-anchor="middle">11-20</text>
+  <path d="M194.5,352.0 L194.5,307.4 Q194.5,303.4 198.5,303.4 L214.5,303.4 Q218.5,303.4 218.5,307.4 L218.5,352.0 Z" fill="#2a78d6"/>
+  <text x="206.5" y="372" font-size="11" fill="#52514e" text-anchor="middle">21-30</text>
+  <path d="M252.3,352.0 L252.3,311.9 Q252.3,307.9 256.3,307.9 L272.3,307.9 Q276.3,307.9 276.3,311.9 L276.3,352.0 Z" fill="#2a78d6"/>
+  <text x="264.3" y="372" font-size="11" fill="#52514e" text-anchor="middle">31-40</text>
+  <path d="M310.1,352.0 L310.1,315.6 Q310.1,311.6 314.1,311.6 L330.1,311.6 Q334.1,311.6 334.1,315.6 L334.1,352.0 Z" fill="#2a78d6"/>
+  <text x="322.1" y="372" font-size="11" fill="#52514e" text-anchor="middle">41-50</text>
+  <path d="M367.9,352.0 L367.9,320.3 Q367.9,316.3 371.9,316.3 L387.9,316.3 Q391.9,316.3 391.9,320.3 L391.9,352.0 Z" fill="#2a78d6"/>
+  <text x="379.9" y="372" font-size="11" fill="#52514e" text-anchor="middle">51-60</text>
+  <path d="M425.7,352.0 L425.7,324.0 Q425.7,320.0 429.7,320.0 L445.7,320.0 Q449.7,320.0 449.7,324.0 L449.7,352.0 Z" fill="#2a78d6"/>
+  <text x="437.7" y="372" font-size="11" fill="#52514e" text-anchor="middle">61-70</text>
+  <path d="M483.5,352.0 L483.5,326.7 Q483.5,322.7 487.5,322.7 L503.5,322.7 Q507.5,322.7 507.5,326.7 L507.5,352.0 Z" fill="#2a78d6"/>
+  <text x="495.5" y="372" font-size="11" fill="#52514e" text-anchor="middle">71-80</text>
+  <path d="M541.3,352.0 L541.3,329.4 Q541.3,325.4 545.3,325.4 L561.3,325.4 Q565.3,325.4 565.3,329.4 L565.3,352.0 Z" fill="#2a78d6"/>
+  <text x="553.3" y="372" font-size="11" fill="#52514e" text-anchor="middle">81-90</text>
+  <path d="M599.1,352.0 L599.1,330.8 Q599.1,330.8 599.1,330.8 L623.1,330.8 Q623.1,330.8 623.1,330.8 L623.1,352.0 Z" fill="#2a78d6"/>
+  <path d="M599.1,328.8 L599.1,105.0 Q599.1,101.0 603.1,101.0 L619.1,101.0 Q623.1,101.0 623.1,105.0 L623.1,328.8 Z" fill="#eb6834"/>
+  <text x="611.1" y="93.0" font-size="11" font-weight="600" fill="#0b0b0b" text-anchor="middle">40,551</text>
+  <text x="611.1" y="372" font-size="11" fill="#52514e" text-anchor="middle">91-100</text>
+  <text x="236" y="148" font-size="11.5" font-weight="600" fill="#0b0b0b">37,123 runs (37.1%) reached exactly 100 pulls</text>
+  <text x="236" y="164" font-size="11.5" fill="#52514e">and were resolved by the guarantee. No run exceeded 100.</text>
+  <path d="M510,144 L590.1,144 L590.1,215 L599.1,215" fill="none" stroke="#c3c2b7" stroke-width="1"/>
+  <text x="351.0" y="396" font-size="11.5" fill="#52514e" text-anchor="middle">Pulls required to obtain a Legendary</text>
+  <text x="24" y="418" font-size="11" font-style="italic" fill="#898781">Figure 3. The pity guarantee bounds every run at 100 pulls, piling 37% of outcomes onto the cap.</text>
+</svg>
