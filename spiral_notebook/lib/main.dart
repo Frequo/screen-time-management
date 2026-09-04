@@ -5,14 +5,23 @@ import 'package:spiral_notebook/firebase_options.dart';
 import 'package:spiral_notebook/routes.dart';
 import 'package:spiral_notebook/screens/homeshell.dart';
 import 'package:spiral_notebook/screens/loginscreen.dart';
+import 'package:spiral_notebook/services/character_catalog.dart';
 import 'package:spiral_notebook/services/focus_ambient_audio.dart';
 import 'package:spiral_notebook/services/phone_stand_ble.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final List<GameCharacter> roster = await loadCharacterRoster();
   final bool firebaseEnabled = await _initializeFirebase();
-  runApp(MyApp(appState: SpiralAppState(firebaseEnabled: firebaseEnabled)));
+  runApp(
+    MyApp(
+      appState: SpiralAppState(
+        roster: roster,
+        firebaseEnabled: firebaseEnabled,
+      ),
+    ),
+  );
 }
 
 class _NoStretchScrollBehavior extends MaterialScrollBehavior {

@@ -199,7 +199,7 @@ class _HeroCard extends StatelessWidget {
               ),
               _StatPill(
                 label: 'Collected',
-                value: '${appState.collectedCount}/42',
+                value: '${appState.collectedCount}/${appState.roster.length}',
               ),
               _StatPill(
                 label: 'Focused',

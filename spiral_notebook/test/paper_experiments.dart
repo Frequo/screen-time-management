@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
 
+import 'support/character_roster.dart';
+
 const int kTrials = 100000;
 
 void main() {
@@ -21,7 +23,7 @@ void main() {
   });
 
   test('Experiment A: base rarity distribution (pity suppressed)', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     final Map<CharacterRarity, int> counts = <CharacterRarity, int>{
@@ -73,7 +75,7 @@ void main() {
   });
 
   test('Experiment B: pulls required to obtain a Legendary', () async {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     final List<int> pullsToLegendary = <int>[];

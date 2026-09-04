@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spiral_notebook/app_state.dart';
+
+import 'support/character_roster.dart';
 import 'package:spiral_notebook/main.dart';
 import 'package:spiral_notebook/routes.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
@@ -10,12 +12,12 @@ void main() {
   testWidgets('app enters the main shell from login', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(MyApp(appState: SpiralAppState()));
+    await tester.pumpWidget(MyApp(appState: SpiralAppState(roster: testCharacterRoster)));
 
     expect(find.text('Focugacha'), findsOneWidget);
     expect(find.text('Sign in to Focugacha'), findsOneWidget);
 
-    final SpiralAppState loggedInState = SpiralAppState()
+    final SpiralAppState loggedInState = SpiralAppState(roster: testCharacterRoster)
       ..isLoggedIn = true
       ..playerName = 'Andrew';
 
@@ -33,7 +35,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(900, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     final List<GameCharacter> characters = appState.roster.take(10).toList();
 
     await tester.pumpWidget(

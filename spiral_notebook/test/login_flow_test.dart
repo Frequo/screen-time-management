@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
 
+import 'support/character_roster.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -11,7 +13,7 @@ void main() {
   });
 
   test('creating a new account starts the onboarding tutorial', () async {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     expect(appState.isTutorialActive, isFalse);
@@ -31,7 +33,7 @@ void main() {
   });
 
   test('signing in to an existing account does not start the tutorial', () async {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     await appState.login(

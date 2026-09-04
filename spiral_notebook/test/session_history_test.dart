@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
 
+import 'support/character_roster.dart';
+
 /// Runs one session of [minutes] that finishes at [completedAt].
 ///
 /// Drives the real session path (start -> elapse -> finish) rather than
@@ -27,7 +29,7 @@ void main() {
   });
 
   test('a completed session is recorded in history', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.setDifficulty(AppDifficulty.highSchool); // 5 bits/min
@@ -45,7 +47,7 @@ void main() {
   });
 
   test('sub-minute sessions are not logged', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.clock = () => DateTime(2026, 8, 6, 9);
@@ -58,7 +60,7 @@ void main() {
   });
 
   test('history is capped at the retention limit, newest first', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     final int overflow = SpiralAppState.sessionHistoryLimit + 10;
@@ -79,7 +81,7 @@ void main() {
 
   group('daily totals', () {
     test('today only counts sessions from the current calendar day', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 5, 20), minutes: 60);
@@ -92,7 +94,7 @@ void main() {
     });
 
     test('daily progress tracks the target instead of pinning at full', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       appState.setDailyTarget(90);
@@ -115,7 +117,7 @@ void main() {
     });
 
     test('a new day resets daily progress but not lifetime totals', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 6, 9), minutes: 45);
@@ -128,7 +130,7 @@ void main() {
 
   group('streaks', () {
     test('consecutive days accumulate', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 4, 10));
@@ -141,7 +143,7 @@ void main() {
     });
 
     test('multiple sessions in one day count as a single streak day', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 6, 9));
@@ -153,7 +155,7 @@ void main() {
     });
 
     test('an unfocused day today keeps a streak that ran through yesterday', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 4, 10));
@@ -165,7 +167,7 @@ void main() {
     });
 
     test('a fully missed day breaks the streak', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 8, 1, 10));
@@ -179,7 +181,7 @@ void main() {
     });
 
     test('streaks span month boundaries', () {
-      final SpiralAppState appState = SpiralAppState();
+      final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
       addTearDown(appState.dispose);
 
       _logSession(appState, DateTime(2026, 7, 30, 10));
@@ -192,7 +194,7 @@ void main() {
   });
 
   test('recentDailyTotals returns a padded, oldest-first window', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     _logSession(appState, DateTime(2026, 8, 6, 10), minutes: 40);
@@ -214,7 +216,7 @@ void main() {
 
   test('history survives a save/load round trip through the local cache', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     await appState.login(email: 'player@example.com', password: 'secret');
@@ -225,7 +227,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     // A fresh instance hydrates from the same mock preferences store.
-    final SpiralAppState restored = SpiralAppState();
+    final SpiralAppState restored = SpiralAppState(roster: testCharacterRoster);
     addTearDown(restored.dispose);
     await Future<void>.delayed(Duration.zero);
 
@@ -239,7 +241,7 @@ void main() {
   });
 
   test('malformed history entries are dropped instead of crashing', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     expect(FocusSessionRecord.fromJson(null), isNull);

@@ -6,13 +6,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
+
+import 'support/character_roster.dart';
 import 'package:spiral_notebook/routes.dart';
 import 'package:spiral_notebook/screens/focusscreen.dart';
 import 'package:spiral_notebook/screens/inventoryscreen.dart';
 import 'package:spiral_notebook/screens/settingscreen.dart';
 
 SpiralAppState _stateWithHistory() {
-  final SpiralAppState appState = SpiralAppState()
+  final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster)
     ..isLoggedIn = true
     ..playerName = 'Andrew'
     ..playerEmail = 'andrew@example.com';

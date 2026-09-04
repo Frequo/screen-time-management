@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spiral_notebook/widgets/character_image.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/screens/cutscenescreen.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
@@ -56,7 +57,8 @@ class GachaScreen extends StatelessWidget {
                       ),
                       _BannerStat(
                         label: 'Collection',
-                        value: '${appState.collectedCount}/42',
+                        value:
+                            '${appState.collectedCount}/${appState.roster.length}',
                       ),
                     ],
                   ),
@@ -66,7 +68,9 @@ class GachaScreen extends StatelessWidget {
                       Expanded(
                         key: tutorialTargets?.drawOne,
                         child: FilledButton.icon(
-                          onPressed: () => _handlePull(context, 1),
+                          onPressed: appState.gachaPool.isEmpty
+                              ? null
+                              : () => _handlePull(context, 1),
                           icon: const Icon(Icons.auto_awesome),
                           label: const Text('Draw 1'),
                         ),
@@ -74,7 +78,9 @@ class GachaScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton.tonalIcon(
-                          onPressed: () => _handlePull(context, 10),
+                          onPressed: appState.gachaPool.isEmpty
+                              ? null
+                              : () => _handlePull(context, 10),
                           icon: const Icon(Icons.bolt_rounded),
                           label: const Text('Draw 10'),
                         ),
@@ -100,12 +106,24 @@ class GachaScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Common 68%  |  Rare 22%  |  Epic 9%  |  Legendary 1%',
+                    Text(
+                      appState.gachaPool.isEmpty
+                          ? 'No characters are currently available to draw.'
+                          : appState.gachaRates.entries
+                                .map((entry) {
+                                  final double percent = entry.value * 100;
+                                  final String rate = percent.toStringAsFixed(
+                                    percent == percent.roundToDouble() ? 0 : 1,
+                                  );
+                                  return '${entry.key.label} $rate%';
+                                })
+                                .join('  |  '),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Every 100 pulls guarantees a legendary. Missing characters are slightly favored within each rarity pool.',
+                      appState.hasPullableLegendary
+                          ? 'Every 100 pulls guarantees a legendary. Missing characters are slightly favored within each rarity pool.'
+                          : 'Legendary characters are currently unavailable. Pity is saved until they return. Missing characters are slightly favored within each available rarity pool.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -178,6 +196,9 @@ class GachaScreen extends StatelessWidget {
         appState.tutorialStep == TutorialStep.drawOne &&
         count == 1) {
       final List<GameCharacter> results = appState.tutorialDrawOne();
+      if (results.isEmpty) {
+        return;
+      }
       appState.setTutorialStep(TutorialStep.openSettings);
       Navigator.pushNamed(
         context,
@@ -272,7 +293,9 @@ class _PityBar extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              '${appState.pityRemaining} until guaranteed legendary',
+              appState.hasPullableLegendary
+                  ? '${appState.pityRemaining} until guaranteed legendary'
+                  : 'Pity saved',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -333,7 +356,11 @@ class _CharacterPreviewTile extends StatelessWidget {
               color: character.accent,
             ),
             child: ClipOval(
-              child: Image.asset(character.portraitAsset, fit: BoxFit.cover),
+              child: CharacterImage(
+                asset: character.portraitAsset,
+                url: character.portraitUrl,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(width: 14),

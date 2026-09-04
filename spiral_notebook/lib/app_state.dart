@@ -6,7 +6,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spiral_notebook/theme/app_palette.dart';
+import 'package:spiral_notebook/models/game_character.dart';
+import 'package:spiral_notebook/services/character_catalog.dart';
+
+export 'package:spiral_notebook/models/game_character.dart';
 
 enum AppDifficulty { elementary, middle, highSchool, college }
 
@@ -110,46 +113,6 @@ extension AppAccentStyleDetails on AppAccentStyle {
   };
 }
 
-enum CharacterRarity { common, rare, epic, legendary }
-
-extension CharacterRarityDetails on CharacterRarity {
-  String get label => switch (this) {
-    CharacterRarity.common => 'Common',
-    CharacterRarity.rare => 'Rare',
-    CharacterRarity.epic => 'Epic',
-    CharacterRarity.legendary => 'Legendary',
-  };
-
-  Color get color => switch (this) {
-    CharacterRarity.common => AppPalette.sky,
-    CharacterRarity.rare => AppPalette.mint,
-    CharacterRarity.epic => AppPalette.tangerine,
-    CharacterRarity.legendary => AppPalette.sun,
-  };
-}
-
-class GameCharacter {
-  const GameCharacter({
-    required this.id,
-    required this.name,
-    required this.title,
-    required this.rarity,
-    required this.description,
-    required this.accent,
-    this.portraitAsset = 'assets/overview.png',
-    this.mainAsset = 'assets/fullview.png',
-  });
-
-  final String id;
-  final String name;
-  final String title;
-  final CharacterRarity rarity;
-  final String description;
-  final Color accent;
-  final String portraitAsset;
-  final String mainAsset;
-}
-
 class FocusSessionResult {
   const FocusSessionResult({
     required this.seconds,
@@ -236,7 +199,20 @@ class DailyFocusTotal {
 }
 
 class SpiralAppState extends ChangeNotifier {
-  SpiralAppState({this.firebaseEnabled = false}) {
+  SpiralAppState({
+    required List<GameCharacter> roster,
+    this.firebaseEnabled = false,
+    Stream<List<GameCharacter>>? characterUpdates,
+  }) : _characterCatalog = List<GameCharacter>.unmodifiable(roster) {
+    final Stream<List<GameCharacter>>? updates =
+        characterUpdates ??
+        (firebaseEnabled ? watchCharacterRoster() : null);
+    _characterSubscription = updates?.listen(
+      updateCharacterRoster,
+      onError: (Object error) {
+        debugPrint('Keeping last usable character catalog: $error');
+      },
+    );
     // Keep a handle to the local-cache load so the Firebase reconcile can wait
     // for it (otherwise the cached updatedAtClient/progress may not be in memory
     // yet and a stale server snapshot could clobber newer offline progress).
@@ -271,7 +247,53 @@ class SpiralAppState extends ChangeNotifier {
   static const String _sessionEnabledKey = 'session.enabled';
 
   final Random _random = Random();
-  final List<GameCharacter> roster = _characterRoster;
+  List<GameCharacter> _characterCatalog;
+  StreamSubscription<List<GameCharacter>>? _characterSubscription;
+
+  List<GameCharacter> get roster => List<GameCharacter>.unmodifiable(
+    _characterCatalog.where((character) => !character.hidden),
+  );
+
+  void updateCharacterRoster(List<GameCharacter> characters) {
+    _characterCatalog = List<GameCharacter>.unmodifiable(characters);
+    notifyListeners();
+  }
+
+  List<GameCharacter> get gachaPool => List<GameCharacter>.unmodifiable(
+    roster.where((GameCharacter character) => character.pullable),
+  );
+
+  static const Map<CharacterRarity, int> _rarityWeights =
+      <CharacterRarity, int>{
+        CharacterRarity.common: 680,
+        CharacterRarity.rare: 220,
+        CharacterRarity.epic: 90,
+        CharacterRarity.legendary: 10,
+      };
+
+  Map<CharacterRarity, int> get _availableRarityWeights =>
+      Map<CharacterRarity, int>.unmodifiable(<CharacterRarity, int>{
+        for (final CharacterRarity rarity in CharacterRarity.values)
+          if (gachaPool.any(
+            (GameCharacter character) => character.rarity == rarity,
+          ))
+            rarity: _rarityWeights[rarity]!,
+      });
+
+  bool get hasPullableLegendary =>
+      _availableRarityWeights.containsKey(CharacterRarity.legendary);
+
+  Map<CharacterRarity, double> get gachaRates {
+    final int total = _availableRarityWeights.values.fold(
+      0,
+      (int a, int b) => a + b,
+    );
+    return <CharacterRarity, double>{
+      for (final CharacterRarity rarity in CharacterRarity.values)
+        rarity: total == 0 ? 0 : (_availableRarityWeights[rarity] ?? 0) / total,
+    };
+  }
+
   final Map<String, int> _collection = <String, int>{};
   final List<FocusSessionRecord> _sessionHistory = <FocusSessionRecord>[];
   final bool firebaseEnabled;
@@ -331,8 +353,19 @@ class SpiralAppState extends ChangeNotifier {
   String phoneStandMessage =
       'Connect the stand before starting a hardware focus session.';
   FocusSessionResult? lastFocusResult;
-  GameCharacter? lastPulledCharacter;
-  List<GameCharacter> lastPulledCharacters = <GameCharacter>[];
+  String? _lastPulledCharacterId;
+  GameCharacter? get lastPulledCharacter =>
+      visibleCharacterById(_lastPulledCharacterId ?? '');
+  set lastPulledCharacter(GameCharacter? character) =>
+      _lastPulledCharacterId = character?.id;
+  List<GameCharacter> _lastPulledCharacters = <GameCharacter>[];
+  List<GameCharacter> get lastPulledCharacters => List<GameCharacter>.unmodifiable(
+    _lastPulledCharacters
+        .map((character) => visibleCharacterById(character.id))
+        .whereType<GameCharacter>(),
+  );
+  set lastPulledCharacters(List<GameCharacter> characters) =>
+      _lastPulledCharacters = List<GameCharacter>.unmodifiable(characters);
 
   Map<String, int> get collection => Map<String, int>.unmodifiable(_collection);
 
@@ -944,12 +977,17 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   GameCharacter? findCharacterById(String id) {
-    for (final GameCharacter character in roster) {
+    for (final GameCharacter character in _characterCatalog) {
       if (character.id == id) {
         return character;
       }
     }
     return null;
+  }
+
+  GameCharacter? visibleCharacterById(String id) {
+    final GameCharacter? character = findCharacterById(id);
+    return character == null || character.hidden ? null : character;
   }
 
   GameCharacter? pullCharacter() {
@@ -961,7 +999,7 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   List<GameCharacter>? pullCharacters(int count) {
-    if (count <= 0 || bits < pullCost * count) {
+    if (count <= 0 || bits < pullCost * count || gachaPool.isEmpty) {
       return null;
     }
 
@@ -982,6 +1020,9 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   List<GameCharacter> tutorialDrawOne() {
+    if (gachaPool.isEmpty) {
+      return const <GameCharacter>[];
+    }
     if (bits < pullCost) {
       bits += pullCost - bits;
     }
@@ -1001,11 +1042,14 @@ class SpiralAppState extends ChangeNotifier {
     totalPulls += 1;
     pityCounter += 1;
 
-    final bool guaranteedLegendary = pityCounter >= pityLimit;
+    final bool guaranteedLegendary =
+        pityCounter >= pityLimit && hasPullableLegendary;
     final CharacterRarity rarity = _rollRarity(
       guaranteedLegendary: guaranteedLegendary,
     );
-    final List<GameCharacter> rarityPool = charactersByRarity(rarity);
+    final List<GameCharacter> rarityPool = gachaPool
+        .where((GameCharacter character) => character.rarity == rarity)
+        .toList(growable: false);
     final List<GameCharacter> missingFromPool = rarityPool
         .where((GameCharacter character) => !isCollected(character))
         .toList(growable: false);
@@ -1065,6 +1109,7 @@ class SpiralAppState extends ChangeNotifier {
   void dispose() {
     _stopTicker();
     _authSubscription?.cancel();
+    _characterSubscription?.cancel();
     super.dispose();
   }
 
@@ -1253,9 +1298,7 @@ class SpiralAppState extends ChangeNotifier {
       accentStyle = _accentStyleFromName(
         data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
       );
-      lastPulledCharacter = findCharacterById(
-        data['lastPulledCharacterId'] as String? ?? '',
-      );
+      _lastPulledCharacterId = data['lastPulledCharacterId'] as String?;
       _applySessionHistoryData(data['sessionHistory']);
       await _persistLocalCache();
       notifyListeners();
@@ -1297,7 +1340,7 @@ class SpiralAppState extends ChangeNotifier {
         'hasCompletedTutorial': hasCompletedTutorial,
         'themeMode': themeMode.name,
         'accentStyle': accentStyle.name,
-        'lastPulledCharacterId': lastPulledCharacter?.id,
+        'lastPulledCharacterId': _lastPulledCharacterId,
         'sessionHistory': _sessionHistoryData(),
         'updatedAtClient': _progressUpdatedAt,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -1391,9 +1434,7 @@ class SpiralAppState extends ChangeNotifier {
     accentStyle = _accentStyleFromName(
       data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
     );
-    lastPulledCharacter = findCharacterById(
-      data['lastPulledCharacterId'] as String? ?? '',
-    );
+    _lastPulledCharacterId = data['lastPulledCharacterId'] as String?;
     _applySessionHistoryData(data['sessionHistory']);
     lastFocusResult = null;
     lastPulledCharacters = <GameCharacter>[];
@@ -1476,7 +1517,7 @@ class SpiralAppState extends ChangeNotifier {
       'hasCompletedTutorial': hasCompletedTutorial,
       'themeMode': themeMode.name,
       'accentStyle': accentStyle.name,
-      'lastPulledCharacterId': lastPulledCharacter?.id,
+      'lastPulledCharacterId': _lastPulledCharacterId,
       'sessionHistory': _sessionHistoryData(),
       'updatedAtClient': _progressUpdatedAt,
     };
@@ -1584,17 +1625,19 @@ class SpiralAppState extends ChangeNotifier {
       return CharacterRarity.legendary;
     }
 
-    final int roll = _random.nextInt(1000);
-    if (roll < 10) {
-      return CharacterRarity.legendary;
+    final int total = _availableRarityWeights.values.fold(
+      0,
+      (int a, int b) => a + b,
+    );
+    int roll = _random.nextInt(total);
+    for (final MapEntry<CharacterRarity, int> entry
+        in _availableRarityWeights.entries) {
+      if (roll < entry.value) {
+        return entry.key;
+      }
+      roll -= entry.value;
     }
-    if (roll < 100) {
-      return CharacterRarity.epic;
-    }
-    if (roll < 320) {
-      return CharacterRarity.rare;
-    }
-    return CharacterRarity.common;
+    throw StateError('No pullable character rarity available');
   }
 
   String _sessionLabel(int seconds) {
@@ -1613,384 +1656,3 @@ class SpiralAppState extends ChangeNotifier {
     return 'Quick burst';
   }
 }
-
-const List<GameCharacter> _characterRoster = <GameCharacter>[
-  GameCharacter(
-    id: 'mina-sidewalk-sketcher',
-    name: 'Minato Vale',
-    title: 'Sidewalk Sketcher',
-    rarity: CharacterRarity.common,
-    description:
-        'Turns every study break into a chalk mural full of tiny city cats.',
-    accent: Color(0xFF83B5D1),
-  ),
-  GameCharacter(
-    id: 'theo-trainstop-coder',
-    name: 'Theo Quill',
-    title: 'Trainstop Coder',
-    rarity: CharacterRarity.common,
-    description:
-        'Builds timer widgets between station arrivals and always ships on time.',
-    accent: Color(0xFF799EC2),
-  ),
-  GameCharacter(
-    id: 'june-courier',
-    name: 'Juniper Rush',
-    title: 'Bubble Tea Courier',
-    rarity: CharacterRarity.common,
-    description:
-        'Knows every shortcut in the district and every cafe with open outlets.',
-    accent: Color(0xFF97D7B6),
-  ),
-  GameCharacter(
-    id: 'nico-corner-drummer',
-    name: 'Nico Static',
-    title: 'Corner Drummer',
-    rarity: CharacterRarity.common,
-    description:
-        'Keeps your focus rhythm steady with tabletop beats and subway grooves.',
-    accent: Color(0xFFF2B36D),
-  ),
-  GameCharacter(
-    id: 'yara-bookshop-scout',
-    name: 'Yara Finch',
-    title: 'Bookshop Scout',
-    rarity: CharacterRarity.common,
-    description:
-        'Can find the quietest reading nook in any neighborhood within seconds.',
-    accent: Color(0xFF90B5A4),
-  ),
-  GameCharacter(
-    id: 'eli-park-runner',
-    name: 'Eli Mercer',
-    title: 'Park Runner',
-    rarity: CharacterRarity.common,
-    description:
-        'Uses sunrise laps to reset before classes and talks only in split times.',
-    accent: Color(0xFF8BCF9B),
-  ),
-  GameCharacter(
-    id: 'sora-night-vendor',
-    name: 'Sora Ember',
-    title: 'Night Market Vendor',
-    rarity: CharacterRarity.common,
-    description:
-        'Sells paper lanterns that glow brighter after every finished task list.',
-    accent: Color(0xFFFFB36C),
-  ),
-  GameCharacter(
-    id: 'ava-busker-bloom',
-    name: 'Ava Lark',
-    title: 'Busker Bloom',
-    rarity: CharacterRarity.common,
-    description:
-        'Plays bright pop hooks that somehow make even math worksheets feel lighter.',
-    accent: Color(0xFFF29D94),
-  ),
-  GameCharacter(
-    id: 'leo-crosswalk-captain',
-    name: 'Leo Voss',
-    title: 'Crosswalk Captain',
-    rarity: CharacterRarity.common,
-    description:
-        'Keeps the whole block moving with a whistle, hand signs, and perfect timing.',
-    accent: Color(0xFFE2C15F),
-  ),
-  GameCharacter(
-    id: 'hana-rooftop-gardener',
-    name: 'Hana Reed',
-    title: 'Rooftop Gardener',
-    rarity: CharacterRarity.common,
-    description:
-        'Grows tomatoes, mint, and impossible patience above a noisy avenue.',
-    accent: Color(0xFF7AC792),
-  ),
-  GameCharacter(
-    id: 'owen-cafe-lead',
-    name: 'Owen Slate',
-    title: 'Cafe Shift Lead',
-    rarity: CharacterRarity.common,
-    description:
-        'Can remember eight custom orders and your exam schedule at the same time.',
-    accent: Color(0xFFC08B6C),
-  ),
-  GameCharacter(
-    id: 'mira-library-navigator',
-    name: 'Mira Sol',
-    title: 'Library Navigator',
-    rarity: CharacterRarity.common,
-    description:
-        'Guides lost freshmen through stacks, deadlines, and printer disasters.',
-    accent: Color(0xFF9BA9CF),
-  ),
-  GameCharacter(
-    id: 'ben-skate-loop',
-    name: 'Bennett Loop',
-    title: 'Skate Loop Kid',
-    rarity: CharacterRarity.common,
-    description:
-        'Can land a clean kickflip only after he finishes his homework checklist.',
-    accent: Color(0xFF80B5C1),
-  ),
-  GameCharacter(
-    id: 'zoe-raincoat-dreamer',
-    name: 'Zoe Nightjar',
-    title: 'Raincoat Dreamer',
-    rarity: CharacterRarity.common,
-    description:
-        'Collects storm sounds and writes essays that feel like midnight sidewalks.',
-    accent: Color(0xFF91A8D4),
-  ),
-  GameCharacter(
-    id: 'ian-repair-club-ace',
-    name: 'Ian Calder',
-    title: 'Repair Club Ace',
-    rarity: CharacterRarity.common,
-    description:
-        'Can fix a wobbly desk, a snapped cable, and your morale before lunch.',
-    accent: Color(0xFFA5B7C4),
-  ),
-  GameCharacter(
-    id: 'lila-lantern-walker',
-    name: 'Lila Wren',
-    title: 'Lantern Walker',
-    rarity: CharacterRarity.common,
-    description:
-        'Stays out late mapping alley lights and the best routes home from cram school.',
-    accent: Color(0xFFFFA28A),
-  ),
-  GameCharacter(
-    id: 'celine-neon-barista',
-    name: 'Celine Lux',
-    title: 'Neon Barista',
-    rarity: CharacterRarity.rare,
-    description:
-        'Steams perfect milk art while juggling playlists, shifts, and side projects.',
-    accent: Color(0xFF40B7B3),
-  ),
-  GameCharacter(
-    id: 'felix-metro-dj',
-    name: 'Felix Echo',
-    title: 'Metro DJ',
-    rarity: CharacterRarity.rare,
-    description:
-        'Turns late train announcements into the backbone of impossible club mixes.',
-    accent: Color(0xFF36A4A2),
-  ),
-  GameCharacter(
-    id: 'priya-studio-sprinter',
-    name: 'Priya Vale',
-    title: 'Studio Sprinter',
-    rarity: CharacterRarity.rare,
-    description:
-        'Finishes design critiques faster than anyone and still has time to help.',
-    accent: Color(0xFF2CB59D),
-  ),
-  GameCharacter(
-    id: 'mateo-arcade-tactician',
-    name: 'Mateo Grid',
-    title: 'Arcade Tactician',
-    rarity: CharacterRarity.rare,
-    description:
-        'Tracks combo routes, lab timers, and cafeteria lines with equal precision.',
-    accent: Color(0xFF21B2A0),
-  ),
-  GameCharacter(
-    id: 'iris-signal-hacker',
-    name: 'Iris Kade',
-    title: 'Signal Hacker',
-    rarity: CharacterRarity.rare,
-    description:
-        'Makes ancient projectors behave and never explains how she learned that.',
-    accent: Color(0xFF4AB4C8),
-  ),
-  GameCharacter(
-    id: 'ruby-sticker-poet',
-    name: 'Ruby Verse',
-    title: 'Sticker Poet',
-    rarity: CharacterRarity.rare,
-    description:
-        'Leaves tiny motivational lines hidden on notebooks all over the city.',
-    accent: Color(0xFF3FA89D),
-  ),
-  GameCharacter(
-    id: 'damon-bike-messenger',
-    name: 'Damon Swift',
-    title: 'Bike Messenger',
-    rarity: CharacterRarity.rare,
-    description:
-        'Treats every deadline like a checkpoint race through afternoon traffic.',
-    accent: Color(0xFF3DC993),
-  ),
-  GameCharacter(
-    id: 'harper-street-stylist',
-    name: 'Harper Rue',
-    title: 'Street Stylist',
-    rarity: CharacterRarity.rare,
-    description:
-        'Can thrift a whole outfit around one bright scarf and a train pass.',
-    accent: Color(0xFF53AA80),
-  ),
-  GameCharacter(
-    id: 'kira-window-painter',
-    name: 'Kira Bloom',
-    title: 'Window Painter',
-    rarity: CharacterRarity.rare,
-    description:
-        'Fills storefront glass with city scenes that vanish by the next rainstorm.',
-    accent: Color(0xFF44B6AE),
-  ),
-  GameCharacter(
-    id: 'adrian-courtyard-coach',
-    name: 'Adrian Pike',
-    title: 'Courtyard Coach',
-    rarity: CharacterRarity.rare,
-    description:
-        'Runs lunchtime drills that somehow improve both posture and confidence.',
-    accent: Color(0xFF2EAF94),
-  ),
-  GameCharacter(
-    id: 'nia-newsstand-sage',
-    name: 'Nia Marlowe',
-    title: 'Newsstand Sage',
-    rarity: CharacterRarity.rare,
-    description:
-        'Always knows the weather, test schedule, and local gossip before sunrise.',
-    accent: Color(0xFF3CB8B1),
-  ),
-  GameCharacter(
-    id: 'rowan-tram-guardian',
-    name: 'Rowan Drift',
-    title: 'Tram Guardian',
-    rarity: CharacterRarity.rare,
-    description:
-        'Keeps late riders calm with dry jokes and suspiciously perfect directions.',
-    accent: Color(0xFF2F9F93),
-  ),
-  GameCharacter(
-    id: 'selene-skyline-architect',
-    name: 'Selene Arclight',
-    title: 'Skyline Architect',
-    rarity: CharacterRarity.epic,
-    description:
-        'Designs rooftop classrooms where the wind sounds like turning notebook pages.',
-    accent: Color(0xFFCF7E49),
-  ),
-  GameCharacter(
-    id: 'jasper-midnight-chef',
-    name: 'Jasper Noctis',
-    title: 'Midnight Chef',
-    rarity: CharacterRarity.epic,
-    description:
-        'Runs a hidden ramen counter that opens only after the city clocks chime.',
-    accent: Color(0xFFD26C3E),
-  ),
-  GameCharacter(
-    id: 'talia-festival-director',
-    name: 'Talia Sunmark',
-    title: 'Festival Director',
-    rarity: CharacterRarity.epic,
-    description:
-        'Can light an entire block party with paper lanterns and ruthless scheduling.',
-    accent: Color(0xFFDE8850),
-  ),
-  GameCharacter(
-    id: 'quinn-clocktower-engineer',
-    name: 'Quinn Brass',
-    title: 'Clocktower Engineer',
-    rarity: CharacterRarity.epic,
-    description:
-        'Repairs the old district bells so every hour lands exactly on beat.',
-    accent: Color(0xFFBD6B42),
-  ),
-  GameCharacter(
-    id: 'ayla-graffiti-virtuoso',
-    name: 'Ayla Chrom',
-    title: 'Graffiti Virtuoso',
-    rarity: CharacterRarity.epic,
-    description:
-        'Paints color across gray walls without ever missing a curfew or deadline.',
-    accent: Color(0xFFE07A39),
-  ),
-  GameCharacter(
-    id: 'cass-solar-botanist',
-    name: 'Cass Aureline',
-    title: 'Solar Botanist',
-    rarity: CharacterRarity.epic,
-    description:
-        'Runs a greenhouse on old station roofs powered by scavenged panels.',
-    accent: Color(0xFFD28F4C),
-  ),
-  GameCharacter(
-    id: 'victor-rain-district-marshal',
-    name: 'Victor Stroud',
-    title: 'Rain District Marshal',
-    rarity: CharacterRarity.epic,
-    description:
-        'Keeps storm drains clear, traffic calm, and umbrellas moving like a parade.',
-    accent: Color(0xFFC86A2E),
-  ),
-  GameCharacter(
-    id: 'naomi-storyline-producer',
-    name: 'Naomi Reeve',
-    title: 'Storyline Producer',
-    rarity: CharacterRarity.epic,
-    description:
-        'Directs music videos on the fly with little more than lights and nerve.',
-    accent: Color(0xFFD77955),
-  ),
-  GameCharacter(
-    id: 'orion-sandglass-regent',
-    name: 'Orion Halcyon',
-    title: 'Sandglass Regent',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Rules the invisible hour between distraction and momentum with calm authority.',
-    accent: Color(0xFFF0B52A),
-  ),
-  GameCharacter(
-    id: 'freya-citylight-oracle',
-    name: 'Freya Lumen',
-    title: 'Citylight Oracle',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Reads the glow of apartment windows to tell who is studying and who needs rest.',
-    accent: Color(0xFFE7A51F),
-  ),
-  GameCharacter(
-    id: 'atlas-dawnline-captain',
-    name: 'Atlas Meridian',
-    title: 'Dawnline Captain',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Leads the first train of the day and never lets the city start out of step.',
-    accent: Color(0xFFF2BE3A),
-  ),
-  GameCharacter(
-    id: 'vega-celestial-courier',
-    name: 'Vega Starling',
-    title: 'Celestial Courier',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Delivers sealed messages between rooftops faster than the weather can change.',
-    accent: Color(0xFFE9B83A),
-  ),
-  GameCharacter(
-    id: 'lyra-prism-conductor',
-    name: 'Lyra Prism',
-    title: 'Prism Conductor',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Turns station glass, sunset light, and train noise into color-soaked symphonies.',
-    accent: Color(0xFFF3C74B),
-  ),
-  GameCharacter(
-    id: 'solstice-last-bell',
-    name: 'Solstice Vale',
-    title: 'The Last Bell',
-    rarity: CharacterRarity.legendary,
-    description:
-        'Appears when a long focus session finally clicks and the whole city seems still.',
-    accent: Color(0xFFFFD36A),
-  ),
-];

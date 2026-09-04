@@ -43,7 +43,7 @@ class _InfoScreenState extends State<InfoScreen> {
     _InfoSlide(
       title: '4. Pull and collect',
       body:
-          'Spend bits in the gacha banner to unlock colorful city characters. Every 100 pulls guarantees a legendary.',
+          'Spend bits in the gacha banner to unlock characters. Check the banner for current rates and legendary availability. Your pity progress is saved while no legendary is available.',
       accent: AppPalette.tangerine,
       icon: Icons.auto_awesome,
     ),

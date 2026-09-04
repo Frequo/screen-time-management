@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
+
+import 'support/character_roster.dart';
 import 'package:spiral_notebook/screens/historyscreen.dart';
 
 void _logSession(
@@ -31,7 +33,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     await tester.pumpWidget(_wrap(appState));
@@ -50,7 +52,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.setDailyTarget(90);
@@ -97,7 +99,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.setDailyTarget(30);
@@ -118,7 +120,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     for (int i = 0; i < 5; i += 1) {

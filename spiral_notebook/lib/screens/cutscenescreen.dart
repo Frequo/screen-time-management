@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:spiral_notebook/widgets/character_image.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
@@ -44,6 +45,7 @@ class _CutsceneScreenState extends State<CutsceneScreen>
   @override
   void initState() {
     super.initState();
+    widget.appState.addListener(_catalogChanged);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -70,14 +72,29 @@ class _CutsceneScreenState extends State<CutsceneScreen>
 
   @override
   void dispose() {
+    widget.appState.removeListener(_catalogChanged);
     _revealTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  void _catalogChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final CutsceneArgs args = _args ?? _resolvedArgs(context);
+    final CutsceneArgs original = _args ?? _resolvedArgs(context);
+    final CutsceneArgs args = CutsceneArgs(
+      characters: original.characters
+          .map(
+            (character) => widget.appState.visibleCharacterById(character.id),
+          )
+          .whereType<GameCharacter>()
+          .toList(growable: false),
+      currentIndex: original.currentIndex,
+      allowSkip: original.allowSkip,
+    );
     if (args.characters.isEmpty) {
       return Scaffold(
         appBar: AppBar(),
@@ -338,7 +355,11 @@ class _RevealCard extends StatelessWidget {
               color: character.accent,
             ),
             child: ClipOval(
-              child: Image.asset(character.portraitAsset, fit: BoxFit.cover),
+              child: CharacterImage(
+                asset: character.portraitAsset,
+                url: character.portraitUrl,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -414,10 +435,21 @@ class PullResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, child) => _buildResults(context),
+    );
+  }
+
+  Widget _buildResults(BuildContext context) {
     final Object? arguments = ModalRoute.of(context)?.settings.arguments;
-    final List<GameCharacter> characters = arguments is PullResultsArgs
+    final List<GameCharacter> original = arguments is PullResultsArgs
         ? arguments.characters
         : appState.lastPulledCharacters;
+    final List<GameCharacter> characters = original
+        .map((character) => appState.visibleCharacterById(character.id))
+        .whereType<GameCharacter>()
+        .toList(growable: false);
 
     if (characters.isEmpty) {
       return Scaffold(
@@ -473,8 +505,9 @@ class PullResultsScreen extends StatelessWidget {
                                 color: character.accent,
                               ),
                               child: ClipOval(
-                                child: Image.asset(
-                                  character.portraitAsset,
+                                child: CharacterImage(
+                                  asset: character.portraitAsset,
+                                  url: character.portraitUrl,
                                   fit: BoxFit.cover,
                                 ),
                               ),

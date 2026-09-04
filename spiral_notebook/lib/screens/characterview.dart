@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spiral_notebook/widgets/character_image.dart';
 import 'package:spiral_notebook/app_state.dart';
 import 'package:spiral_notebook/widgets/app_bar_settings_action.dart';
 import 'package:spiral_notebook/widgets/rarity_backdrop.dart';
@@ -44,13 +45,23 @@ class CharacterDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool owned = appState.isCollected(character);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(owned ? character.name : 'Unknown character'),
-        actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
-      ),
-      body: CharacterDetailBody(appState: appState, character: character),
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, child) {
+        final GameCharacter? current = appState.visibleCharacterById(
+          character.id,
+        );
+        final bool owned = current != null && appState.isCollected(current);
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(owned ? current.name : 'Unknown character'),
+            actions: const <Widget>[AppBarSettingsAction(), SizedBox(width: 8)],
+          ),
+          body: current == null
+              ? const Center(child: Text('Character unavailable'))
+              : CharacterDetailBody(appState: appState, character: current),
+        );
+      },
     );
   }
 }
@@ -202,19 +213,9 @@ Future<void> showCharacterDetailSheet(
         heightFactor: 0.9,
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                appState.isCollected(character)
-                    ? character.name
-                    : 'Unknown character',
-              ),
-              actions: const <Widget>[
-                AppBarSettingsAction(),
-                SizedBox(width: 8),
-              ],
-            ),
-            body: CharacterDetailBody(appState: appState, character: character),
+          child: CharacterDetailScreen(
+            appState: appState,
+            character: character,
           ),
         ),
       );
@@ -265,8 +266,9 @@ class _CharacterGridTile extends StatelessWidget {
                     ),
                     child: owned
                         ? ClipOval(
-                            child: Image.asset(
-                              character.portraitAsset,
+                            child: CharacterImage(
+                              asset: character.portraitAsset,
+                              url: character.portraitUrl,
                               fit: BoxFit.cover,
                             ),
                           )
@@ -333,7 +335,11 @@ class _CharacterArtwork extends StatelessWidget {
         ],
       ),
       child: owned
-          ? Image.asset(character.mainAsset, fit: BoxFit.cover)
+          ? CharacterImage(
+              asset: character.mainAsset,
+              url: character.mainUrl,
+              fit: BoxFit.cover,
+            )
           : const Icon(Icons.lock_rounded, size: 120, color: Colors.white),
     );
   }

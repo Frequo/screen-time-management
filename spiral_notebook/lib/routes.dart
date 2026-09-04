@@ -53,7 +53,7 @@ Route<dynamic> onGenerateAppRoute(
       final String? characterId = settings.arguments as String?;
       final GameCharacter? character = characterId == null
           ? null
-          : appState.findCharacterById(characterId);
+          : appState.visibleCharacterById(characterId);
       if (character == null) {
         return _buildRoute(
           const _MissingRouteScreen(message: 'Character not found'),

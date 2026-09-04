@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spiral_notebook/app_state.dart';
+
+import 'support/character_roster.dart';
 import 'package:spiral_notebook/theme/app_palette.dart';
 import 'package:spiral_notebook/widgets/tutorial_overlay.dart';
 
@@ -27,7 +29,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
     final TutorialTargetKeys targetKeys = TutorialTargetKeys();
 
@@ -104,7 +106,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
     final TutorialTargetKeys targetKeys = TutorialTargetKeys();
 

@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spiral_notebook/app_state.dart';
 
+import 'support/character_roster.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -11,7 +13,7 @@ void main() {
   });
 
   test('focus reward is locked to the difficulty chosen at session start', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     // Start a long session on the lowest-reward tier (College = 3 bits/min).
@@ -32,7 +34,7 @@ void main() {
   });
 
   test('reward preview reflects the live difficulty before a session', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.setFocusTarget(60);
@@ -47,7 +49,7 @@ void main() {
   });
 
   test('phone stand removal pauses and replacement resumes a session', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.updatePhoneStandConnectionStatus(
@@ -72,7 +74,7 @@ void main() {
   });
 
   test('a guaranteed (pity) legendary resets the pity counter to zero', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.bits = SpiralAppState.pullCost * 5;
@@ -88,7 +90,7 @@ void main() {
   });
 
   test('pity accrues by exactly one per pull when no legendary is hit', () {
-    final SpiralAppState appState = SpiralAppState();
+    final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.bits = SpiralAppState.pullCost * 20;
