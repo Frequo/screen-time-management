@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
+  String? _verificationMessage;
 
   @override
   void dispose() {
@@ -113,135 +114,185 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                           const SizedBox(height: 28),
-                          SegmentedButton<bool>(
-                            segments: const <ButtonSegment<bool>>[
-                              ButtonSegment<bool>(
-                                value: false,
-                                icon: Icon(Icons.login_rounded),
-                                label: Text('Sign in'),
-                              ),
-                              ButtonSegment<bool>(
-                                value: true,
-                                icon: Icon(Icons.person_add_alt_1_rounded),
-                                label: Text('Create account'),
-                              ),
+                          if (widget.appState.verificationEmail !=
+                              null) ...<Widget>[
+                            Text(
+                              'Verify your email',
+                              style: theme.textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Check ${widget.appState.verificationEmail} for a verification link. Open it, then return here.',
+                            ),
+                            if (_verificationMessage != null) ...<Widget>[
+                              const SizedBox(height: 12),
+                              Text(_verificationMessage!),
                             ],
-                            selected: <bool>{_isCreateAccount},
-                            onSelectionChanged: (Set<bool> selection) {
-                              setState(() {
-                                _isCreateAccount = selection.first;
-                                _errorMessage = null;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          if (_isCreateAccount) ...<Widget>[
-                            TextField(
-                              controller: _nameController,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Display name',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.badge_outlined),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              helperText:
-                                  'Uses Firebase email and password auth on configured mobile builds.',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.mail_outline_rounded),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: _isCreateAccount
-                                ? TextInputAction.next
-                                : TextInputAction.done,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
+                            if (_errorMessage != null) ...<Widget>[
+                              const SizedBox(height: 12),
+                              Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
                                 ),
                               ),
+                            ],
+                            const SizedBox(height: 20),
+                            FilledButton.icon(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : _checkVerification,
+                              icon: const Icon(Icons.verified_outlined),
+                              label: const Text("I've verified my email"),
                             ),
-                          ),
-                          if (_isCreateAccount) ...<Widget>[
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : _resendVerification,
+                              icon: const Icon(
+                                Icons.mark_email_unread_outlined,
+                              ),
+                              label: const Text('Resend verification email'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : _useAnotherAccount,
+                              child: const Text('Use another account'),
+                            ),
+                          ] else ...<Widget>[
+                            SegmentedButton<bool>(
+                              segments: const <ButtonSegment<bool>>[
+                                ButtonSegment<bool>(
+                                  value: false,
+                                  icon: Icon(Icons.login_rounded),
+                                  label: Text('Sign in'),
+                                ),
+                                ButtonSegment<bool>(
+                                  value: true,
+                                  icon: Icon(Icons.person_add_alt_1_rounded),
+                                  label: Text('Create account'),
+                                ),
+                              ],
+                              selected: <bool>{_isCreateAccount},
+                              onSelectionChanged: (Set<bool> selection) {
+                                setState(() {
+                                  _isCreateAccount = selection.first;
+                                  _errorMessage = null;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            if (_isCreateAccount) ...<Widget>[
+                              TextField(
+                                controller: _nameController,
+                                textInputAction: TextInputAction.next,
+                                decoration: const InputDecoration(
+                                  labelText: 'Display name',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.badge_outlined),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                helperText:
+                                    'Uses Firebase email and password auth on configured mobile builds.',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.mail_outline_rounded),
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             TextField(
-                              controller: _confirmPasswordController,
-                              obscureText: _obscureConfirmPassword,
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: _isCreateAccount
+                                  ? TextInputAction.next
+                                  : TextInputAction.done,
                               decoration: InputDecoration(
-                                labelText: 'Confirm password',
+                                labelText: 'Password',
                                 border: const OutlineInputBorder(),
                                 prefixIcon: const Icon(
-                                  Icons.verified_user_outlined,
+                                  Icons.lock_outline_rounded,
                                 ),
                                 suffixIcon: IconButton(
                                   onPressed: () {
                                     setState(() {
-                                      _obscureConfirmPassword =
-                                          !_obscureConfirmPassword;
+                                      _obscurePassword = !_obscurePassword;
                                     });
                                   },
                                   icon: Icon(
-                                    _obscureConfirmPassword
+                                    _obscurePassword
                                         ? Icons.visibility_off_rounded
                                         : Icons.visibility_rounded,
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                          if (_errorMessage != null) ...<Widget>[
-                            const SizedBox(height: 12),
-                            Text(
-                              _errorMessage!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
+                            if (_isCreateAccount) ...<Widget>[
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: _confirmPasswordController,
+                                obscureText: _obscureConfirmPassword,
+                                decoration: InputDecoration(
+                                  labelText: 'Confirm password',
+                                  border: const OutlineInputBorder(),
+                                  prefixIcon: const Icon(
+                                    Icons.verified_user_outlined,
+                                  ),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirmPassword =
+                                            !_obscureConfirmPassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_off_rounded
+                                          : Icons.visibility_rounded,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (_errorMessage != null) ...<Widget>[
+                              const SizedBox(height: 12),
+                              Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 20),
+                            FilledButton.icon(
+                              onPressed: _isSubmitting ? null : _enterApp,
+                              icon: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.arrow_forward_rounded),
+                              label: Text(
+                                _isSubmitting
+                                    ? 'Connecting...'
+                                    : _isCreateAccount
+                                    ? 'Create Focugacha account'
+                                    : 'Sign in to Focugacha',
                               ),
                             ),
                           ],
-                          const SizedBox(height: 20),
-                          FilledButton.icon(
-                            onPressed: _isSubmitting ? null : _enterApp,
-                            icon: _isSubmitting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.arrow_forward_rounded),
-                            label: Text(
-                              _isSubmitting
-                                  ? 'Connecting...'
-                                  : _isCreateAccount
-                                  ? 'Create Focugacha account'
-                                  : 'Sign in to Focugacha',
-                            ),
-                          ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
                             onPressed: () =>
@@ -323,6 +374,13 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
         createAccount: _isCreateAccount,
       );
+      if (mounted && widget.appState.verificationEmail != null) {
+        setState(() {
+          _verificationMessage = _isCreateAccount
+              ? 'Verification email sent. Check your inbox and spam folder.'
+              : 'Verify your email before signing in. You can resend the link here.';
+        });
+      }
       // On success the reactive auth gate swaps to the home shell on its own
       // once login sets isLoggedIn = true. New-account onboarding is started
       // inside login() itself, because this screen may already be unmounted by
@@ -339,6 +397,81 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isSubmitting = false;
         });
+      }
+    }
+  }
+
+  Future<void> _checkVerification() async {
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      final bool verified = await widget.appState.checkEmailVerification();
+      if (mounted && !verified) {
+        setState(() {
+          _errorMessage =
+              'Email is not verified yet. Open the link and try again.';
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _messageForError(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  Future<void> _resendVerification() async {
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      await widget.appState.resendVerificationEmail();
+      if (mounted) {
+        setState(() {
+          _verificationMessage =
+              'Verification email sent. Check your inbox and spam folder.';
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _messageForError(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  Future<void> _useAnotherAccount() async {
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      await widget.appState.cancelPendingVerification();
+      if (mounted) {
+        setState(() {
+          _emailController.clear();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          _verificationMessage = null;
+          _isCreateAccount = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _errorMessage = _messageForError(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }

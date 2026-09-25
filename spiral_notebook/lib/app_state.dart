@@ -242,6 +242,9 @@ class SpiralAppState extends ChangeNotifier {
   static const String _sessionEmailKey = 'session.email';
   static const String _sessionNameKey = 'session.name';
   static const String _sessionUserIdKey = 'session.userId';
+  static const String _sessionVerifiedKey = 'session.verified';
+  static const String _pendingTutorialUserIdKey =
+      'verification.pendingTutorialUserId';
   static const String _progressCacheKey = 'progress.cache';
   static const String _sessionEnabledKey = 'session.enabled';
 
@@ -310,6 +313,7 @@ class SpiralAppState extends ChangeNotifier {
   int? _lockedRewardPerMinute;
 
   bool isLoggedIn = false;
+  String? verificationEmail;
   String playerName = '';
   String playerEmail = '';
   String? playerId;
@@ -565,6 +569,16 @@ class SpiralAppState extends ChangeNotifier {
       await user.reload();
       user = FirebaseAuth.instance.currentUser ?? user;
 
+      if (!user.emailVerified) {
+        _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
+        if (createAccount) {
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_pendingTutorialUserIdKey, user.uid);
+          await user.sendEmailVerification();
+        }
+        return;
+      }
+
       _syncFromFirebaseUser(user, fallbackEmail: trimmedEmail);
       await _persistLocalCache();
       await _syncProfileToFirebase(
@@ -573,7 +587,7 @@ class SpiralAppState extends ChangeNotifier {
         email: trimmedEmail,
       );
       await _loadProgressFromFirebase();
-      _maybeStartOnboarding(createAccount);
+      await _maybeStartVerifiedOnboarding(user.uid, createdNow: createAccount);
       return;
     } on FirebaseAuthException catch (error) {
       if (await _canRecoverFromNetworkSignInFailure(
@@ -592,17 +606,77 @@ class SpiralAppState extends ChangeNotifier {
     }
   }
 
+  Future<void> resendVerificationEmail() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-signed-out',
+        message: 'Sign in again to resend the verification email.',
+      );
+    }
+    if (user.emailVerified) {
+      return;
+    }
+    await user.sendEmailVerification();
+  }
+
+  Future<bool> checkEmailVerification() async {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return false;
+    }
+    await currentUser.reload();
+    final User user = FirebaseAuth.instance.currentUser ?? currentUser;
+    if (!user.emailVerified) {
+      return false;
+    }
+
+    _syncFromFirebaseUser(user);
+    await _persistLocalCache();
+    await _syncProfileToFirebase(
+      user: user,
+      resolvedName: playerName,
+      email: playerEmail,
+    );
+    await _loadProgressFromFirebase();
+    await _maybeStartVerifiedOnboarding(user.uid);
+    return true;
+  }
+
+  Future<void> cancelPendingVerification() async {
+    await _clearLocalCache();
+    if (firebaseEnabled) {
+      await FirebaseAuth.instance.signOut();
+    }
+    verificationEmail = null;
+    _clearSession();
+    notifyListeners();
+  }
+
   // Starts the first-time tutorial for a freshly created account. This lives in
   // the app state (not the login screen) because the reactive auth gate unmounts
   // the login screen as soon as isLoggedIn flips true, so post-await code there
   // is not guaranteed to run.
   void _maybeStartOnboarding(bool createAccount) {
-    if (createAccount && !hasCompletedTutorial) {
+    if (createAccount && !hasCompletedTutorial && !isTutorialActive) {
       startTutorial();
     }
   }
 
+  Future<void> _maybeStartVerifiedOnboarding(
+    String uid, {
+    bool createdNow = false,
+  }) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool pending = prefs.getString(_pendingTutorialUserIdKey) == uid;
+    if (pending) {
+      await prefs.remove(_pendingTutorialUserIdKey);
+    }
+    _maybeStartOnboarding(createdNow || pending);
+  }
+
   Future<void> logout() async {
+    verificationEmail = null;
     _stopTicker();
     isFocusActive = false;
     isFocusPaused = false;
@@ -1172,6 +1246,7 @@ class SpiralAppState extends ChangeNotifier {
   }) {
     if (user == null) {
       _clearSession();
+      verificationEmail = null;
       if (notify) {
         notifyListeners();
       }
@@ -1179,6 +1254,15 @@ class SpiralAppState extends ChangeNotifier {
     }
 
     final String resolvedEmail = user.email ?? fallbackEmail ?? playerEmail;
+    if (!user.emailVerified) {
+      _clearSession();
+      verificationEmail = resolvedEmail;
+      if (notify) {
+        notifyListeners();
+      }
+      return;
+    }
+    verificationEmail = null;
     playerName = _normalizedName(
       displayName: user.displayName ?? '',
       email: resolvedEmail,
@@ -1194,7 +1278,7 @@ class SpiralAppState extends ChangeNotifier {
 
   Future<void> _handleAuthStateChanged(User? user) async {
     _syncFromFirebaseUser(user);
-    if (user == null) {
+    if (user == null || !user.emailVerified) {
       return;
     }
     // Restore progress from the still-intact local cache before persisting or
@@ -1217,6 +1301,7 @@ class SpiralAppState extends ChangeNotifier {
     }
     await _persistLocalCache();
     await _loadProgressFromFirebase();
+    await _maybeStartVerifiedOnboarding(user.uid);
   }
 
   Future<void> _loadProgressFromFirebase() {
@@ -1365,6 +1450,19 @@ class SpiralAppState extends ChangeNotifier {
       return;
     }
 
+    if (firebaseEnabled) {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null ||
+          !currentUser.emailVerified ||
+          prefs.getString(_sessionUserIdKey) != currentUser.uid) {
+        // A local cache cannot establish verification on its own. Restore it
+        // only for the matching account that Firebase says is verified. Older
+        // caches have no verification marker but are safe once Firebase has
+        // confirmed the current account.
+        return;
+      }
+    }
+
     if (!isLoggedIn) {
       // Restore the session identity from cache (offline, or before Firebase
       // has restored the auth user).
@@ -1482,12 +1580,17 @@ class SpiralAppState extends ChangeNotifier {
       await prefs.remove(_sessionEmailKey);
       await prefs.remove(_sessionNameKey);
       await prefs.remove(_sessionUserIdKey);
+      await prefs.remove(_sessionVerifiedKey);
       await prefs.remove(_progressCacheKey);
       return;
     }
 
     await prefs.setString(_sessionEmailKey, playerEmail);
     await prefs.setString(_sessionNameKey, playerName);
+    if (firebaseEnabled &&
+        FirebaseAuth.instance.currentUser?.emailVerified == true) {
+      await prefs.setBool(_sessionVerifiedKey, true);
+    }
     if (playerId != null && playerId!.isNotEmpty) {
       await prefs.setString(_sessionUserIdKey, playerId!);
     } else {
@@ -1502,6 +1605,7 @@ class SpiralAppState extends ChangeNotifier {
     await prefs.remove(_sessionEmailKey);
     await prefs.remove(_sessionNameKey);
     await prefs.remove(_sessionUserIdKey);
+    await prefs.remove(_sessionVerifiedKey);
     await prefs.remove(_progressCacheKey);
   }
 
@@ -1559,7 +1663,9 @@ class SpiralAppState extends ChangeNotifier {
     final String cachedEmail = (prefs.getString(_sessionEmailKey) ?? '')
         .trim()
         .toLowerCase();
-    return cachedEmail.isNotEmpty && cachedEmail == email.trim().toLowerCase();
+    return prefs.getBool(_sessionVerifiedKey) == true &&
+        cachedEmail.isNotEmpty &&
+        cachedEmail == email.trim().toLowerCase();
   }
 
   Future<String?> _cachedNameForEmail(String email) async {
