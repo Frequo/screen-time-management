@@ -53,6 +53,7 @@ service cloud.firestore {
                'themeMode',
                'accentStyle',
                'lastPulledCharacterId',
+               'sessionHistory',
                'updatedAtClient',
                'updatedAt'
              ]) &&
@@ -104,6 +105,9 @@ service cloud.firestore {
                 request.resource.data.lastPulledCharacterId == null ||
                 (request.resource.data.lastPulledCharacterId is string &&
                  request.resource.data.lastPulledCharacterId.size() <= 80)) &&
+             (!('sessionHistory' in request.resource.data) ||
+                (request.resource.data.sessionHistory is list &&
+                 request.resource.data.sessionHistory.size() <= 120)) &&
              validOptionalNonNegativeInt('updatedAtClient') &&
              (!('updatedAt' in request.resource.data) ||
                 request.resource.data.updatedAt is timestamp);

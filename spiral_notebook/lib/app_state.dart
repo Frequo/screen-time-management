@@ -1351,7 +1351,8 @@ class SpiralAppState extends ChangeNotifier {
             'updatedAtClient': _progressUpdatedAt,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-    } on FirebaseException {
+    } on FirebaseException catch (error) {
+      debugPrint('Could not save progress to Firestore: $error');
       // Offline or transient failure. The local cache holds the latest state
       // and the next successful load reconciles via updatedAtClient.
     }
