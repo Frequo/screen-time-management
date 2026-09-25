@@ -61,17 +61,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: <Widget>[
                           Row(
                             children: <Widget>[
-                              Container(
-                                height: 64,
-                                width: 64,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppPalette.sky,
-                                ),
-                                child: const Icon(
-                                  Icons.hourglass_bottom_rounded,
-                                  color: Colors.white,
-                                  size: 32,
+                              // Container(
+                              //   height: 64,
+                              //   width: 64,
+                              //   decoration: const BoxDecoration(
+                              //     shape: BoxShape.circle,
+                              //     color: AppPalette.sky,
+                              //   ),
+                              //   child: const Icon(
+                              //     Icons.hourglass_bottom_rounded,
+                              //     color: Colors.white,
+                              //     size: 32,
+                              //   ),
+                              // ),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(32),
+                                child: Image.asset(
+                                  'assets/Iconimagery.png',
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                               const SizedBox(width: 16),
