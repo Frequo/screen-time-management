@@ -81,7 +81,7 @@ class FocusScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${appState.selectedFocusTarget} minute target',
+                          '${appState.formatDuration(appState.selectedFocusTarget * 60)} target',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -139,18 +139,25 @@ class FocusScreen extends StatelessWidget {
                     Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      children: SpiralAppState.focusTargets
-                          .map((int target) {
-                            final bool selected =
-                                target == appState.selectedFocusTarget;
-                            return ChoiceChip(
-                              label: Text('$target min'),
-                              selected: selected,
-                              onSelected: (_) =>
-                                  appState.setFocusTarget(target),
-                            );
-                          })
-                          .toList(growable: false),
+                      children: <Widget>[
+                        ...SpiralAppState.focusTargets.map((int target) {
+                          final bool selected =
+                              target == appState.selectedFocusTarget;
+                          return ChoiceChip(
+                            label: Text('$target min'),
+                            selected: selected,
+                            onSelected: (_) => appState.setFocusTarget(target),
+                          );
+                        }),
+                        ChoiceChip(
+                          label: const Text('Custom'),
+                          selected: !SpiralAppState.focusTargets.contains(
+                            appState.selectedFocusTarget,
+                          ),
+                          onSelected: (_) =>
+                              _chooseCustomFocusTarget(context, appState),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -221,6 +228,95 @@ class FocusScreen extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> _chooseCustomFocusTarget(
+  BuildContext context,
+  SpiralAppState appState,
+) async {
+  final int? minutes = await showDialog<int>(
+    context: context,
+    builder: (BuildContext context) => _CustomFocusTargetDialog(
+      initialMinutes:
+          SpiralAppState.focusTargets.contains(appState.selectedFocusTarget)
+          ? 60
+          : appState.selectedFocusTarget,
+    ),
+  );
+  if (minutes != null) appState.setFocusTarget(minutes);
+}
+
+class _CustomFocusTargetDialog extends StatefulWidget {
+  const _CustomFocusTargetDialog({required this.initialMinutes});
+
+  final int initialMinutes;
+
+  @override
+  State<_CustomFocusTargetDialog> createState() =>
+      _CustomFocusTargetDialogState();
+}
+
+class _CustomFocusTargetDialogState extends State<_CustomFocusTargetDialog> {
+  late int _hours;
+  late int _minutes;
+
+  @override
+  void initState() {
+    super.initState();
+    _hours = widget.initialMinutes ~/ 60;
+    _minutes = widget.initialMinutes % 60;
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Custom session length'),
+    content: Row(
+      children: <Widget>[
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            key: ValueKey<int>(_hours),
+            initialValue: _hours,
+            decoration: const InputDecoration(labelText: 'Hours'),
+            items: List<DropdownMenuItem<int>>.generate(
+              11,
+              (int value) =>
+                  DropdownMenuItem<int>(value: value, child: Text('$value')),
+            ),
+            onChanged: (int? value) => setState(() {
+              _hours = value ?? 0;
+              if (_hours == 10) _minutes = 0;
+            }),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            key: ValueKey<String>('$_hours:$_minutes'),
+            initialValue: _minutes,
+            decoration: const InputDecoration(labelText: 'Minutes'),
+            items: List<DropdownMenuItem<int>>.generate(
+              _hours == 10 ? 1 : 60,
+              (int value) =>
+                  DropdownMenuItem<int>(value: value, child: Text('$value')),
+            ),
+            onChanged: (int? value) => setState(() => _minutes = value ?? 0),
+          ),
+        ),
+      ],
+    ),
+    actions: <Widget>[
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: _hours * 60 + _minutes == 0
+            ? null
+            : () => Navigator.pop(context, _hours * 60 + _minutes),
+        child: const Text('Set session'),
+      ),
+    ],
+  );
 }
 
 class _ImmersiveFocusView extends StatefulWidget {

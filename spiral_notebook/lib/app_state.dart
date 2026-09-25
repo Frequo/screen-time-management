@@ -205,8 +205,7 @@ class SpiralAppState extends ChangeNotifier {
     Stream<List<GameCharacter>>? characterUpdates,
   }) : _characterCatalog = List<GameCharacter>.unmodifiable(roster) {
     final Stream<List<GameCharacter>>? updates =
-        characterUpdates ??
-        (firebaseEnabled ? watchCharacterRoster() : null);
+        characterUpdates ?? (firebaseEnabled ? watchCharacterRoster() : null);
     _characterSubscription = updates?.listen(
       updateCharacterRoster,
       onError: (Object error) {
@@ -359,11 +358,12 @@ class SpiralAppState extends ChangeNotifier {
   set lastPulledCharacter(GameCharacter? character) =>
       _lastPulledCharacterId = character?.id;
   List<GameCharacter> _lastPulledCharacters = <GameCharacter>[];
-  List<GameCharacter> get lastPulledCharacters => List<GameCharacter>.unmodifiable(
-    _lastPulledCharacters
-        .map((character) => visibleCharacterById(character.id))
-        .whereType<GameCharacter>(),
-  );
+  List<GameCharacter> get lastPulledCharacters =>
+      List<GameCharacter>.unmodifiable(
+        _lastPulledCharacters
+            .map((character) => visibleCharacterById(character.id))
+            .whereType<GameCharacter>(),
+      );
   set lastPulledCharacters(List<GameCharacter> characters) =>
       _lastPulledCharacters = List<GameCharacter>.unmodifiable(characters);
 
@@ -426,7 +426,8 @@ class SpiralAppState extends ChangeNotifier {
 
   bool get isDailyTargetMet => todayFocusMinutes >= dailyTargetMinutes;
 
-  int get dailyMinutesRemaining => max(0, dailyTargetMinutes - todayFocusMinutes);
+  int get dailyMinutesRemaining =>
+      max(0, dailyTargetMinutes - todayFocusMinutes);
 
   /// Consecutive calendar days ending today (or yesterday, if today has no
   /// session yet) on which at least one session was recorded.
@@ -679,7 +680,7 @@ class SpiralAppState extends ChangeNotifier {
   }
 
   void setFocusTarget(int value) {
-    selectedFocusTarget = value;
+    selectedFocusTarget = value.clamp(1, 10 * 60).toInt();
     notifyListeners();
     _persistProgress();
   }
@@ -857,7 +858,10 @@ class SpiralAppState extends ChangeNotifier {
         ),
       );
       if (_sessionHistory.length > sessionHistoryLimit) {
-        _sessionHistory.removeRange(sessionHistoryLimit, _sessionHistory.length);
+        _sessionHistory.removeRange(
+          sessionHistoryLimit,
+          _sessionHistory.length,
+        );
       }
     }
 
@@ -1224,9 +1228,11 @@ class SpiralAppState extends ChangeNotifier {
     // Coalesce concurrent loads. On sign-in both login() and the
     // authStateChanges listener kick off a load; sharing one in-flight fetch
     // avoids duplicate reads and a non-deterministic last-writer.
-    return _progressLoad ??= _loadProgressFromFirebaseImpl(uid).whenComplete(() {
-      _progressLoad = null;
-    });
+    return _progressLoad ??= _loadProgressFromFirebaseImpl(uid).whenComplete(
+      () {
+        _progressLoad = null;
+      },
+    );
   }
 
   Future<void> _loadProgressFromFirebaseImpl(String uid) async {
@@ -1319,32 +1325,32 @@ class SpiralAppState extends ChangeNotifier {
       return;
     }
     try {
-      await FirebaseFirestore.instance.collection('users').doc(playerId).set(<
-        String,
-        Object?
-      >{
-        'collection': _collection,
-        'difficulty': difficulty.name,
-        'soundEnabled': soundEnabled,
-        'ambientSoundsEnabled': ambientSoundsEnabled,
-        'hapticsEnabled': hapticsEnabled,
-        'reminderEnabled': reminderEnabled,
-        'sessionBackgroundEnabled': sessionBackgroundEnabled,
-        'dailyTargetMinutes': dailyTargetMinutes,
-        'selectedFocusTarget': selectedFocusTarget,
-        'totalFocusMinutes': totalFocusMinutes,
-        'bestSessionSeconds': bestSessionSeconds,
-        'bits': bits,
-        'totalPulls': totalPulls,
-        'pityCounter': pityCounter,
-        'hasCompletedTutorial': hasCompletedTutorial,
-        'themeMode': themeMode.name,
-        'accentStyle': accentStyle.name,
-        'lastPulledCharacterId': _lastPulledCharacterId,
-        'sessionHistory': _sessionHistoryData(),
-        'updatedAtClient': _progressUpdatedAt,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(playerId)
+          .set(<String, Object?>{
+            'collection': _collection,
+            'difficulty': difficulty.name,
+            'soundEnabled': soundEnabled,
+            'ambientSoundsEnabled': ambientSoundsEnabled,
+            'hapticsEnabled': hapticsEnabled,
+            'reminderEnabled': reminderEnabled,
+            'sessionBackgroundEnabled': sessionBackgroundEnabled,
+            'dailyTargetMinutes': dailyTargetMinutes,
+            'selectedFocusTarget': selectedFocusTarget,
+            'totalFocusMinutes': totalFocusMinutes,
+            'bestSessionSeconds': bestSessionSeconds,
+            'bits': bits,
+            'totalPulls': totalPulls,
+            'pityCounter': pityCounter,
+            'hasCompletedTutorial': hasCompletedTutorial,
+            'themeMode': themeMode.name,
+            'accentStyle': accentStyle.name,
+            'lastPulledCharacterId': _lastPulledCharacterId,
+            'sessionHistory': _sessionHistoryData(),
+            'updatedAtClient': _progressUpdatedAt,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } on FirebaseException {
       // Offline or transient failure. The local cache holds the latest state
       // and the next successful load reconciles via updatedAtClient.
