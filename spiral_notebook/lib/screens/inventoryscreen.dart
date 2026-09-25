@@ -166,7 +166,7 @@ class _HeroCard extends StatelessWidget {
       key: tutorialTargets?.inventoryHero,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(16),
         color: theme.cardColor,
         border: Border.all(color: AppPalette.sky, width: 2),
       ),
@@ -230,7 +230,7 @@ class _StatPill extends StatelessWidget {
         color: isDark
             ? Colors.white.withValues(alpha: 0.08)
             : AppPalette.sky.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.12)

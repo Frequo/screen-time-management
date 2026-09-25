@@ -85,7 +85,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +117,7 @@ class _InfoScreenState extends State<InfoScreen> {
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius: BorderRadius.circular(14),
                                     color: slide.accent,
                                   ),
                                   child: Center(
@@ -148,7 +148,7 @@ class _InfoScreenState extends State<InfoScreen> {
                         color: index == _index
                             ? Theme.of(context).colorScheme.primary
                             : AppPalette.ink.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(499.5),
                       ),
                     );
                   }),

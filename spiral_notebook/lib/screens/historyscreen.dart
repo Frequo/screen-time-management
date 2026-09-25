@@ -124,7 +124,7 @@ class DailyProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(499.5),
             child: LinearProgressIndicator(
               minHeight: 12,
               value: appState.dailyProgress,
@@ -262,75 +262,78 @@ class _WeeklyChartCard extends StatelessWidget {
               height: 140,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: week.map((DailyFocusTotal day) {
-                  final bool isToday = day.date == today;
-                  final double fraction = peak == 0
-                      ? 0
-                      : (day.minutes / peak).clamp(0, 1).toDouble();
+                children: week
+                    .map((DailyFocusTotal day) {
+                      final bool isToday = day.date == today;
+                      final double fraction = peak == 0
+                          ? 0
+                          : (day.minutes / peak).clamp(0, 1).toDouble();
 
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          Text(
-                            day.minutes == 0 ? '' : '${day.minutes}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Expanded(
-                            child: LayoutBuilder(
-                              builder:
-                                  (
-                                    BuildContext context,
-                                    BoxConstraints constraints,
-                                  ) {
-                                    return Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: Container(
-                                        // Keep a sliver visible on empty days
-                                        // so the axis reads as a full week.
-                                        height:
-                                            4 +
-                                            (constraints.maxHeight - 4) *
-                                                fraction,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text(
+                                day.minutes == 0 ? '' : '${day.minutes}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Expanded(
+                                child: LayoutBuilder(
+                                  builder:
+                                      (
+                                        BuildContext context,
+                                        BoxConstraints constraints,
+                                      ) {
+                                        return Align(
+                                          alignment: Alignment.bottomCenter,
+                                          child: Container(
+                                            // Keep a sliver visible on empty days
+                                            // so the axis reads as a full week.
+                                            height:
+                                                4 +
+                                                (constraints.maxHeight - 4) *
+                                                    fraction,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              color: day.minutes == 0
+                                                  ? theme.colorScheme.onSurface
+                                                        .withValues(alpha: 0.12)
+                                                  : isToday
+                                                  ? theme.colorScheme.primary
+                                                  : theme.colorScheme.primary
+                                                        .withValues(
+                                                          alpha: 0.55,
+                                                        ),
+                                            ),
                                           ),
-                                          color: day.minutes == 0
-                                              ? theme.colorScheme.onSurface
-                                                    .withValues(alpha: 0.12)
-                                              : isToday
-                                              ? theme.colorScheme.primary
-                                              : theme.colorScheme.primary
-                                                    .withValues(alpha: 0.55),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            ),
+                                        );
+                                      },
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _weekdayLabels[day.date.weekday - 1],
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: isToday
+                                      ? FontWeight.w800
+                                      : FontWeight.w500,
+                                  color: isToday
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _weekdayLabels[day.date.weekday - 1],
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: isToday
-                                  ? FontWeight.w800
-                                  : FontWeight.w500,
-                              color: isToday
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(growable: false),
+                        ),
+                      );
+                    })
+                    .toList(growable: false),
               ),
             ),
           ],
@@ -620,7 +623,7 @@ class _StatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(4.5),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
@@ -660,7 +663,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(499.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -669,9 +672,9 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),

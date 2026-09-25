@@ -145,6 +145,7 @@ class _MyAppState extends State<MyApp> {
           themeMode: widget.appState.themeMode,
           theme: ThemeData(
             useMaterial3: true,
+            fontFamily: 'ShortStack',
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.light,
               seedColor: accentStyle.lightPrimary,
@@ -173,7 +174,7 @@ class _MyAppState extends State<MyApp> {
               color: lightCard,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(14),
               ),
               margin: EdgeInsets.zero,
             ),
@@ -181,15 +182,15 @@ class _MyAppState extends State<MyApp> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.72),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: const BorderSide(color: AppPalette.line),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: const BorderSide(color: AppPalette.line),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: BorderSide(
                   color: accentStyle.lightPrimary,
                   width: 1.5,
@@ -205,7 +206,7 @@ class _MyAppState extends State<MyApp> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(4.5),
                 ),
               ),
             ),
@@ -218,7 +219,7 @@ class _MyAppState extends State<MyApp> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(4.5),
                 ),
               ),
             ),
@@ -248,7 +249,7 @@ class _MyAppState extends State<MyApp> {
               labelStyle: const TextStyle(color: AppPalette.ink),
               secondaryLabelStyle: const TextStyle(color: AppPalette.ink),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
               ),
             ),
             navigationBarTheme: NavigationBarThemeData(
@@ -261,6 +262,7 @@ class _MyAppState extends State<MyApp> {
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
+            fontFamily: 'ShortStack',
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
               seedColor: accentStyle.darkPrimary,
@@ -289,7 +291,7 @@ class _MyAppState extends State<MyApp> {
               color: darkCard,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(14),
               ),
               margin: EdgeInsets.zero,
             ),
@@ -297,15 +299,15 @@ class _MyAppState extends State<MyApp> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.06),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: const BorderSide(color: Color(0xFF1A4666)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: const BorderSide(color: Color(0xFF1A4666)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
                 borderSide: BorderSide(
                   color: accentStyle.darkPrimary,
                   width: 1.5,
@@ -321,7 +323,7 @@ class _MyAppState extends State<MyApp> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(4.5),
                 ),
               ),
             ),
@@ -334,7 +336,7 @@ class _MyAppState extends State<MyApp> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(4.5),
                 ),
               ),
             ),
@@ -364,7 +366,7 @@ class _MyAppState extends State<MyApp> {
               labelStyle: const TextStyle(color: Color(0xFFF4FBFF)),
               secondaryLabelStyle: const TextStyle(color: Color(0xFFF4FBFF)),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(4.5),
               ),
             ),
             navigationBarTheme: NavigationBarThemeData(

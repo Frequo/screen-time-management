@@ -71,6 +71,11 @@ flutter:
     - assets/characters/axel/
   #   - images/a_dot_ham.jpeg
 
+  fonts:
+    - family: ShortStack
+      fonts:
+        - asset: assets/fonts/ShortStack-Regular.ttf
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

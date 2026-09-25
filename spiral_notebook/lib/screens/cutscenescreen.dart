@@ -325,7 +325,7 @@ class _RevealCard extends StatelessWidget {
         color: isDark
             ? const Color(0xEE0B2435)
             : Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: (isDark ? surfaceAccent : rarityAccent).withValues(
             alpha: isDark ? 0.8 : 0.3,
@@ -480,7 +480,7 @@ class PullResultsScreen extends StatelessWidget {
                     isDark: Theme.of(context).brightness == Brightness.dark,
                   );
                   return InkWell(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(12),
                     onTap: () => Navigator.pushNamed(
                       context,
                       '/character',
@@ -489,7 +489,7 @@ class PullResultsScreen extends StatelessWidget {
                     child: Ink(
                       decoration: BoxDecoration(
                         color: palette.base,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: palette.border, width: 1.5),
                       ),
                       child: Padding(

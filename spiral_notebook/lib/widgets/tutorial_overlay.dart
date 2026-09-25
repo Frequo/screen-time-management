@@ -357,7 +357,7 @@ class _GuideCard extends StatelessWidget {
       child: Card(
         color: Theme.of(context).colorScheme.surface,
         elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -403,7 +403,7 @@ class _SpotlightBorder extends StatelessWidget {
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(13),
             border: Border.all(color: AppPalette.sun, width: 3),
             boxShadow: <BoxShadow>[
               BoxShadow(
@@ -428,7 +428,7 @@ class _TutorialSpotlightPainter extends CustomPainter {
     final Path fullScreen = Path()..addRect(Offset.zero & size);
     final Path cutout = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(targetRect, const Radius.circular(26)),
+        RRect.fromRectAndRadius(targetRect, const Radius.circular(13)),
       );
     final Path overlay = Path.combine(
       PathOperation.difference,

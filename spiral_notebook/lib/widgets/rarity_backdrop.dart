@@ -91,7 +91,7 @@ class _Band extends StatelessWidget {
       child: Container(
         height: 110,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(499.5),
           color: color,
         ),
       ),

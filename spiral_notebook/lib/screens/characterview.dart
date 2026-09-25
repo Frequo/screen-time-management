@@ -141,7 +141,7 @@ class CharacterDetailBody extends StatelessWidget {
               color: Theme.of(context).brightness == Brightness.dark
                   ? const Color(0xEE17222A)
                   : Colors.white.withValues(alpha: 0.94),
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +212,7 @@ Future<void> showCharacterDetailSheet(
       return FractionallySizedBox(
         heightFactor: 0.9,
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           child: CharacterDetailScreen(
             appState: appState,
             character: character,
@@ -239,11 +239,11 @@ class _CharacterGridTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Ink(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           color: owned
               ? Theme.of(context).cardColor
               : Theme.of(context).brightness == Brightness.dark
@@ -359,7 +359,7 @@ class _DetailPill extends StatelessWidget {
         color: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xFF1E2A32)
             : const Color(0xFFF4EFE8),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(499.5),
       ),
       child: Text('$label: $value'),
     );

@@ -54,12 +54,12 @@ class DifficultySelectorCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(11),
                   onTap: () => appState.setDifficulty(option),
                   child: Ink(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(11),
                       color: option == appState.difficulty
                           ? option == AppDifficulty.college
                                 ? activeCollegeTileColor

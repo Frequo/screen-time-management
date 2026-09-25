@@ -28,7 +28,7 @@ class FocusScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(16),
                 color: theme.cardColor,
                 border: Border.all(color: AppPalette.mint, width: 2),
               ),
@@ -383,7 +383,7 @@ class _ImmersiveFocusViewState extends State<_ImmersiveFocusView>
                             SizedBox(
                               width: 280,
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(499.5),
                                 child: LinearProgressIndicator(
                                   minHeight: 12,
                                   value: appState.selectedFocusTarget == 0
@@ -540,7 +540,7 @@ class _ImmersiveStandStatus extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(499.5),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Padding(
@@ -879,7 +879,7 @@ class _FocusFact extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppPalette.sun.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(4.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

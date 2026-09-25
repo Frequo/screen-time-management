@@ -23,7 +23,7 @@ class GachaScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(16),
                 color: theme.cardColor,
                 border: Border.all(color: AppPalette.tangerine, width: 2),
               ),
@@ -246,7 +246,7 @@ class _BannerStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppPalette.tangerine.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppPalette.tangerine.withValues(alpha: 0.4)),
       ),
       child: Column(
@@ -305,7 +305,7 @@ class _PityBar extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(499.5),
           child: SizedBox(
             height: 12,
             child: Stack(
@@ -344,7 +344,7 @@ class _CharacterPreviewTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: character.accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(11),
       ),
       child: Row(
         children: <Widget>[

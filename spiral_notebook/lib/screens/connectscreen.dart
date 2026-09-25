@@ -44,7 +44,7 @@ class ConnectStandScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: connected && appState.isPhoneOnStand
                           ? AppPalette.mint

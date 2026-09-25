@@ -311,14 +311,13 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(499.5),
                               child: LinearProgressIndicator(
                                 minHeight: 10,
                                 value: appState.dailyProgress,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.10),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.10),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -488,13 +487,13 @@ class _AccentStyleChip extends StatelessWidget {
         : style.lightSecondary;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(4.5),
       onTap: onSelected,
       child: Ink(
         width: 132,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(4.5),
           color: theme.cardColor,
           border: Border.all(
             color: isSelected
@@ -512,7 +511,7 @@ class _AccentStyleChip extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: <Color>[previewColor, previewSecondary],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(6),
               ),
             ),
             const SizedBox(height: 10),
