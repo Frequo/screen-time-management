@@ -514,5 +514,41 @@
     "mainAsset": "assets/characters/axel/axel_full.jpg",
     "pullable": true,
     "hidden": false
+  },
+  {
+    "id": "holder",
+    "name": "Holder",
+    "title": "Holder",
+    "rarity": "rare",
+    "description": "the place holder for the rare rarity",
+    "accent": "FF40B7B3",
+    "portraitAsset": "assets/characters/Holder/portrait.jpeg",
+    "mainAsset": "assets/characters/Holder/fullview.jpeg",
+    "pullable": true,
+    "hidden": false
+  },
+  {
+    "id": "e-holder",
+    "name": "E-Holder",
+    "title": "E-Holder",
+    "rarity": "epic",
+    "description": "Place holder for the epic rarity",
+    "accent": "FF9B59B6",
+    "portraitAsset": "assets/characters/E-Holder/portrait.JPG",
+    "mainAsset": "assets/characters/E-Holder/fullview.jpeg",
+    "pullable": true,
+    "hidden": false
+  },
+  {
+    "id": "l-holder",
+    "name": "L-Holder",
+    "title": "L-Holder",
+    "rarity": "legendary",
+    "description": "Place holder for legendary characters",
+    "accent": "FFE9B83A",
+    "portraitAsset": "assets/characters/L-Holder/portrait.jpeg",
+    "mainAsset": "assets/characters/L-Holder/fullview.jpeg",
+    "pullable": true,
+    "hidden": false
   }
 ]
