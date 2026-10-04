@@ -8,8 +8,8 @@
     "accent": "FF83B5D1",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "theo-trainstop-coder",
@@ -20,8 +20,8 @@
     "accent": "FF799EC2",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "june-courier",
@@ -32,8 +32,8 @@
     "accent": "FF97D7B6",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "nico-corner-drummer",
@@ -44,8 +44,8 @@
     "accent": "FFF2B36D",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "yara-bookshop-scout",
@@ -56,8 +56,8 @@
     "accent": "FF90B5A4",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "eli-park-runner",
@@ -68,8 +68,8 @@
     "accent": "FF8BCF9B",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "sora-night-vendor",
@@ -80,8 +80,8 @@
     "accent": "FFFFB36C",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "ava-busker-bloom",
@@ -92,8 +92,8 @@
     "accent": "FFF29D94",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "leo-crosswalk-captain",
@@ -104,8 +104,8 @@
     "accent": "FFE2C15F",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "hana-rooftop-gardener",
@@ -116,8 +116,8 @@
     "accent": "FF7AC792",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "owen-cafe-lead",
@@ -128,8 +128,8 @@
     "accent": "FFC08B6C",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "mira-library-navigator",
@@ -140,8 +140,8 @@
     "accent": "FF9BA9CF",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "ben-skate-loop",
@@ -152,8 +152,8 @@
     "accent": "FF80B5C1",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "zoe-raincoat-dreamer",
@@ -164,8 +164,8 @@
     "accent": "FF91A8D4",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "ian-repair-club-ace",
@@ -176,8 +176,8 @@
     "accent": "FFA5B7C4",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "lila-lantern-walker",
@@ -188,8 +188,8 @@
     "accent": "FFFFA28A",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "celine-neon-barista",
@@ -200,8 +200,8 @@
     "accent": "FF40B7B3",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "felix-metro-dj",
@@ -212,8 +212,8 @@
     "accent": "FF36A4A2",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "priya-studio-sprinter",
@@ -224,8 +224,8 @@
     "accent": "FF2CB59D",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "mateo-arcade-tactician",
@@ -236,8 +236,8 @@
     "accent": "FF21B2A0",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "iris-signal-hacker",
@@ -248,8 +248,8 @@
     "accent": "FF4AB4C8",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "ruby-sticker-poet",
@@ -260,8 +260,8 @@
     "accent": "FF3FA89D",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "damon-bike-messenger",
@@ -272,8 +272,8 @@
     "accent": "FF3DC993",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "harper-street-stylist",
@@ -284,8 +284,8 @@
     "accent": "FF53AA80",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "kira-window-painter",
@@ -296,8 +296,8 @@
     "accent": "FF44B6AE",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "adrian-courtyard-coach",
@@ -308,8 +308,8 @@
     "accent": "FF2EAF94",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "nia-newsstand-sage",
@@ -320,8 +320,8 @@
     "accent": "FF3CB8B1",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "rowan-tram-guardian",
@@ -332,8 +332,8 @@
     "accent": "FF2F9F93",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "selene-skyline-architect",
@@ -344,8 +344,8 @@
     "accent": "FFCF7E49",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "jasper-midnight-chef",
@@ -356,8 +356,8 @@
     "accent": "FFD26C3E",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "talia-festival-director",
@@ -368,8 +368,8 @@
     "accent": "FFDE8850",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "quinn-clocktower-engineer",
@@ -380,8 +380,8 @@
     "accent": "FFBD6B42",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "ayla-graffiti-virtuoso",
@@ -392,8 +392,8 @@
     "accent": "FFE07A39",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "cass-solar-botanist",
@@ -404,8 +404,8 @@
     "accent": "FFD28F4C",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "victor-rain-district-marshal",
@@ -416,8 +416,8 @@
     "accent": "FFC86A2E",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "naomi-storyline-producer",
@@ -428,8 +428,8 @@
     "accent": "FFD77955",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "orion-sandglass-regent",
@@ -440,8 +440,8 @@
     "accent": "FFF0B52A",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "freya-citylight-oracle",
@@ -452,8 +452,8 @@
     "accent": "FFE7A51F",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "atlas-dawnline-captain",
@@ -464,8 +464,8 @@
     "accent": "FFF2BE3A",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "vega-celestial-courier",
@@ -476,8 +476,8 @@
     "accent": "FFE9B83A",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "lyra-prism-conductor",
@@ -488,8 +488,8 @@
     "accent": "FFF3C74B",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "solstice-last-bell",
@@ -500,8 +500,8 @@
     "accent": "FFFFD36A",
     "portraitAsset": "assets/overview.png",
     "mainAsset": "assets/fullview.png",
-    "pullable": false,
-    "hidden": true
+    "pullable": true,
+    "hidden": false
   },
   {
     "id": "axel",
