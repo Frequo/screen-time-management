@@ -19,6 +19,7 @@ Future<void> main() async {
       appState: SpiralAppState(
         roster: roster,
         firebaseEnabled: firebaseEnabled,
+        enforceFeaturedCharacters: true,
       ),
     ),
   );

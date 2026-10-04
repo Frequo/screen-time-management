@@ -8,7 +8,7 @@ import 'package:spiral_notebook/models/game_character.dart';
 
 const String characterCatalogAsset = 'assets/characters.json';
 const String characterCatalogDocument = 'catalog/characters';
-const String characterCatalogCacheKey = 'characters.catalog.v1';
+const String characterCatalogCacheKey = 'characters.catalog.v2';
 
 Future<List<GameCharacter>> loadCharacterRoster({
   AssetBundle? bundle,
