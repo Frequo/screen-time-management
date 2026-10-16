@@ -14,15 +14,31 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create, update: if isOwner(userId) && validUserDocument();
-      // Required by the in-app account-deletion flow.
-      allow delete: if isOwner(userId);
+      // Gacha results are written only by the pullCharacters Cloud Function,
+      // so the client can't grant itself characters or reset pity.
+      allow create: if isOwner(userId) && validUserDocument() &&
+                       !request.resource.data.keys().hasAny(serverOwnedFields());
+      allow update: if isOwner(userId) && validUserDocument() &&
+                       !request.resource.data.diff(resource.data)
+                          .affectedKeys().hasAny(serverOwnedFields());
+      // Account deletion cleans this up from the deleteUserData Cloud Function.
+      allow delete: if false;
     }
 
     // Deny all other collections and any future user subcollections until
     // their access model is explicitly defined.
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    function serverOwnedFields() {
+      return [
+        'collection',
+        'totalPulls',
+        'pityCounter',
+        'lastPulledCharacterId',
+        'tutorialPullClaimed'
+      ];
     }
 
     function isOwner(userId) {
@@ -53,6 +69,7 @@ service cloud.firestore {
                'themeMode',
                'accentStyle',
                'lastPulledCharacterId',
+               'tutorialPullClaimed',
                'sessionHistory',
                'updatedAtClient',
                'updatedAt'
@@ -94,6 +111,7 @@ service cloud.firestore {
              validOptionalNonNegativeInt('totalPulls') &&
              validOptionalNonNegativeInt('pityCounter') &&
              validOptionalBoolean('hasCompletedTutorial') &&
+             validOptionalBoolean('tutorialPullClaimed') &&
              (!('themeMode' in request.resource.data) ||
                 request.resource.data.themeMode in ['system', 'light', 'dark']) &&
              (!('accentStyle' in request.resource.data) ||

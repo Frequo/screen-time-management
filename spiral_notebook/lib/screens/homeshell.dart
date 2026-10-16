@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spiral_notebook/app_state.dart';
@@ -243,13 +245,7 @@ class _HomeShellState extends State<HomeShell> {
         widget.appState.setTutorialStep(TutorialStep.gachaBits);
         return;
       case TutorialStep.drawOne:
-        final List<GameCharacter> results = widget.appState.tutorialDrawOne();
-        widget.appState.setTutorialStep(TutorialStep.openSettings);
-        Navigator.pushNamed(
-          context,
-          '/cutscene',
-          arguments: CutsceneArgs(characters: results),
-        );
+        unawaited(_tutorialDrawOne(context));
         return;
       case TutorialStep.openSettings:
         widget.appState.setTutorialStep(TutorialStep.settingsDifficulty);
@@ -261,6 +257,36 @@ class _HomeShellState extends State<HomeShell> {
       default:
         widget.appState.advanceTutorial();
     }
+  }
+
+  Future<void> _tutorialDrawOne(BuildContext context) async {
+    if (widget.appState.isPulling) {
+      return;
+    }
+    List<GameCharacter> results;
+    try {
+      results = await widget.appState.tutorialDrawOne();
+    } catch (error) {
+      debugPrint('Tutorial pull failed: $error');
+      results = const <GameCharacter>[];
+    }
+    if (!context.mounted) {
+      return;
+    }
+    if (results.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't draw a character right now. Try again."),
+        ),
+      );
+      return;
+    }
+    widget.appState.setTutorialStep(TutorialStep.openSettings);
+    Navigator.pushNamed(
+      context,
+      '/cutscene',
+      arguments: CutsceneArgs(characters: results),
+    );
   }
 
   void _openSettings(BuildContext context) {

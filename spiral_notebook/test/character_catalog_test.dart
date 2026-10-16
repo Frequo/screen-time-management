@@ -132,7 +132,7 @@ void main() {
     });
   });
 
-  test('normal, tutorial and pity draws exclude private characters', () {
+  test('normal, tutorial and pity draws exclude private characters', () async {
     final List<GameCharacter> roster = <GameCharacter>[
       for (final CharacterRarity rarity in CharacterRarity.values) ...[
         character('pullable-${rarity.name}', rarity),
@@ -142,11 +142,11 @@ void main() {
     final SpiralAppState state = SpiralAppState(roster: roster);
     addTearDown(state.dispose);
     state.bits = SpiralAppState.pullCost * 200;
-    final List<GameCharacter> results = state.pullCharacters(100)!;
+    final List<GameCharacter> results = (await state.pullCharacters(100))!;
     expect(results.every((item) => item.pullable), isTrue);
-    expect(state.tutorialDrawOne().single.pullable, isTrue);
+    expect((await state.tutorialDrawOne()).single.pullable, isTrue);
     state.pityCounter = SpiralAppState.pityLimit - 1;
-    expect(state.pullCharacter()!.id, 'pullable-legendary');
+    expect((await state.pullCharacter())!.id, 'pullable-legendary');
     expect(state.pityCounter, 0);
     expect(state.findCharacterById('private-common'), isNotNull);
     expect(
@@ -157,7 +157,7 @@ void main() {
 
   test(
     'a single pullable rarity remains drawable and preserves legendary pity',
-    () {
+    () async {
       final SpiralAppState state = SpiralAppState(
         roster: <GameCharacter>[
           character('axel', CharacterRarity.common),
@@ -168,7 +168,7 @@ void main() {
       state.bits = SpiralAppState.pullCost * 10;
       state.pityCounter = SpiralAppState.pityLimit - 1;
       expect(
-        state.pullCharacters(10)!.every((item) => item.id == 'axel'),
+        (await state.pullCharacters(10))!.every((item) => item.id == 'axel'),
         isTrue,
       );
       expect(state.pityCounter, SpiralAppState.pityLimit + 9);
@@ -179,7 +179,7 @@ void main() {
 
   test(
     'an empty pullable pool does not spend or award bits or change pity',
-    () {
+    () async {
       final SpiralAppState state = SpiralAppState(
         roster: <GameCharacter>[
           character('hidden', CharacterRarity.common, pullable: false),
@@ -188,21 +188,21 @@ void main() {
       addTearDown(state.dispose);
       state.bits = SpiralAppState.pullCost * 10;
       state.pityCounter = 99;
-      expect(state.pullCharacters(10), isNull);
-      expect(state.tutorialDrawOne(), isEmpty);
+      expect(await state.pullCharacters(10), isNull);
+      expect(await state.tutorialDrawOne(), isEmpty);
       expect(state.bits, SpiralAppState.pullCost * 10);
       expect(state.pityCounter, 99);
       expect(state.totalPulls, 0);
       expect(state.collection, isEmpty);
       state.bits = 0;
-      expect(state.tutorialDrawOne(), isEmpty);
+      expect(await state.tutorialDrawOne(), isEmpty);
       expect(state.bits, 0);
     },
   );
 
   test(
     'visibility and pullability are independent, with hidden overriding draws',
-    () {
+    () async {
       final SpiralAppState state = SpiralAppState(
         roster: [
           character('active', CharacterRarity.common),
@@ -217,7 +217,7 @@ void main() {
       state.bits = 1000;
       state.pityCounter = 99;
       expect(
-        state.pullCharacters(10)!.every((item) => item.id == 'active'),
+        (await state.pullCharacters(10))!.every((item) => item.id == 'active'),
         isTrue,
       );
       expect(state.hasPullableLegendary, isFalse);
@@ -226,12 +226,12 @@ void main() {
 
   test(
     'live catalog changes preserve ownership and refresh pools and recent pulls',
-    () {
+    () async {
       final GameCharacter active = character('active', CharacterRarity.common);
       final SpiralAppState state = SpiralAppState(roster: [active]);
       addTearDown(state.dispose);
       state.bits = 100;
-      state.pullCharacter();
+      await state.pullCharacter();
       int changes = 0;
       state.addListener(() => changes++);
       state.updateCharacterRoster([
@@ -341,7 +341,7 @@ void main() {
     );
     addTearDown(state.dispose);
     state.bits = 100;
-    state.pullCharacter();
+    await state.pullCharacter();
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

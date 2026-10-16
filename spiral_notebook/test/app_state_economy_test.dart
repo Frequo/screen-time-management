@@ -73,14 +73,14 @@ void main() {
     expect(appState.currentSessionSeconds, 90);
   });
 
-  test('a guaranteed (pity) legendary resets the pity counter to zero', () {
+  test('a guaranteed (pity) legendary resets the pity counter to zero', () async {
     final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
     appState.bits = SpiralAppState.pullCost * 5;
     appState.pityCounter = SpiralAppState.pityLimit - 1; // one short of pity
 
-    final List<GameCharacter>? results = appState.pullCharacters(1);
+    final List<GameCharacter>? results = await appState.pullCharacters(1);
 
     // The pull crosses the pity limit, so it is a guaranteed legendary and the
     // counter resets cleanly to 0.
@@ -89,7 +89,7 @@ void main() {
     expect(appState.pityCounter, 0);
   });
 
-  test('pity accrues by exactly one per pull when no legendary is hit', () {
+  test('pity accrues by exactly one per pull when no legendary is hit', () async {
     final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
@@ -100,7 +100,7 @@ void main() {
     // pity increments by exactly 1 each pull (no spurious batch reset/skip).
     int expected = 0;
     for (int i = 0; i < 10; i += 1) {
-      final List<GameCharacter>? results = appState.pullCharacters(1);
+      final List<GameCharacter>? results = await appState.pullCharacters(1);
       expect(results, isNotNull);
       if (results!.single.rarity == CharacterRarity.legendary) {
         expect(appState.pityCounter, 0);

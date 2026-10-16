@@ -22,7 +22,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  test('Experiment A: base rarity distribution (pity suppressed)', () {
+  test('Experiment A: base rarity distribution (pity suppressed)', () async {
     final SpiralAppState appState = SpiralAppState(roster: testCharacterRoster);
     addTearDown(appState.dispose);
 
@@ -36,7 +36,7 @@ void main() {
       // _rollRarity returns the unmodified base distribution.
       appState.pityCounter = 0;
       appState.bits = SpiralAppState.pullCost;
-      final List<GameCharacter>? pulled = appState.pullCharacters(1);
+      final List<GameCharacter>? pulled = await appState.pullCharacters(1);
       counts[pulled!.single.rarity] = counts[pulled.single.rarity]! + 1;
     }
 
@@ -85,7 +85,7 @@ void main() {
       int pulls = 0;
       while (true) {
         appState.bits = SpiralAppState.pullCost;
-        final List<GameCharacter>? pulled = appState.pullCharacters(1);
+        final List<GameCharacter>? pulled = await appState.pullCharacters(1);
         pulls += 1;
         if (pulled!.single.rarity == CharacterRarity.legendary) {
           break;

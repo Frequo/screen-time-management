@@ -68,7 +68,8 @@ class GachaScreen extends StatelessWidget {
                       Expanded(
                         key: tutorialTargets?.drawOne,
                         child: FilledButton.icon(
-                          onPressed: appState.gachaPool.isEmpty
+                          onPressed:
+                              appState.gachaPool.isEmpty || appState.isPulling
                               ? null
                               : () => _handlePull(context, 1),
                           icon: const Icon(Icons.auto_awesome),
@@ -78,7 +79,8 @@ class GachaScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton.tonalIcon(
-                          onPressed: appState.gachaPool.isEmpty
+                          onPressed:
+                              appState.gachaPool.isEmpty || appState.isPulling
                               ? null
                               : () => _handlePull(context, 10),
                           icon: const Icon(Icons.bolt_rounded),
@@ -191,24 +193,34 @@ class GachaScreen extends StatelessWidget {
     );
   }
 
-  void _handlePull(BuildContext context, int count) {
-    if (appState.isTutorialActive &&
+  Future<void> _handlePull(BuildContext context, int count) async {
+    final bool tutorialDraw =
+        appState.isTutorialActive &&
         appState.tutorialStep == TutorialStep.drawOne &&
-        count == 1) {
-      final List<GameCharacter> results = appState.tutorialDrawOne();
-      if (results.isEmpty) {
-        return;
+        count == 1;
+
+    final List<GameCharacter>? results;
+    try {
+      results = tutorialDraw
+          ? await appState.tutorialDrawOne()
+          : await appState.pullCharacters(count);
+    } catch (error) {
+      debugPrint('Pull failed: $error');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Couldn't reach the server, so no bits were spent. Try again.",
+            ),
+          ),
+        );
       }
-      appState.setTutorialStep(TutorialStep.openSettings);
-      Navigator.pushNamed(
-        context,
-        '/cutscene',
-        arguments: CutsceneArgs(characters: results),
-      );
+      return;
+    }
+    if (!context.mounted) {
       return;
     }
 
-    final List<GameCharacter>? results = appState.pullCharacters(count);
     if (results == null || results.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -222,6 +234,9 @@ class GachaScreen extends StatelessWidget {
       return;
     }
 
+    if (tutorialDraw) {
+      appState.setTutorialStep(TutorialStep.openSettings);
+    }
     Navigator.pushNamed(
       context,
       '/cutscene',

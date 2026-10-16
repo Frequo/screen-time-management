@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -346,6 +347,9 @@ class SpiralAppState extends ChangeNotifier {
   int bits = 0;
   int totalPulls = 0;
   int pityCounter = 0;
+
+  /// True while a server pull is in flight; the gacha buttons wait on it.
+  bool isPulling = false;
   bool hasCompletedTutorial = false;
   bool isTutorialActive = false;
   TutorialStep tutorialStep = TutorialStep.inventoryWelcome;
@@ -705,38 +709,12 @@ class SpiralAppState extends ChangeNotifier {
     if (firebaseEnabled) {
       final User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Delete the Firestore profile FIRST, while the user is still
-        // authenticated. Security rules typically only let a user delete their
-        // own document, so doing this after user.delete() would be rejected and
-        // leave the profile (and its PII) orphaned in Firestore.
-        bool deletedProfile = false;
-        try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .delete();
-          deletedProfile = true;
-        } on FirebaseException {
-          // Best effort; proceed with auth deletion regardless.
-        }
-
-        try {
-          await user.delete();
-        } catch (error) {
-          // Auth deletion commonly fails with requires-recent-login. Restore the
-          // profile + progress we just removed so the account isn't left
-          // half-deleted (cloud progress wiped while the login still works),
-          // then rethrow so the UI can prompt a re-login and retry.
-          if (deletedProfile) {
-            await _syncProfileToFirebase(
-              user: user,
-              resolvedName: playerName,
-              email: playerEmail,
-            );
-            await _persistProgress();
-          }
-          rethrow;
-        }
+        // Only the auth account is deleted here; the deleteUserData Cloud
+        // Function removes users/{uid} once it's gone. Deleting the document
+        // client-side first would lose pull results on a failed deletion
+        // (commonly requires-recent-login), since only the server can write
+        // them back. Errors propagate so the UI can prompt a re-login.
+        await user.delete();
 
         await _clearLocalCache();
         _clearSession();
@@ -1071,17 +1049,23 @@ class SpiralAppState extends ChangeNotifier {
     return character == null || character.hidden ? null : character;
   }
 
-  GameCharacter? pullCharacter() {
-    final List<GameCharacter>? results = pullCharacters(1);
+  Future<GameCharacter?> pullCharacter() async {
+    final List<GameCharacter>? results = await pullCharacters(1);
     if (results == null || results.isEmpty) {
       return null;
     }
     return results.first;
   }
 
-  List<GameCharacter>? pullCharacters(int count) {
+  /// Returns null when the player can't afford [count] pulls or nothing is
+  /// pullable. With Firebase the roll happens in the `pullCharacters` Cloud
+  /// Function, and network/server failures are thrown to the caller.
+  Future<List<GameCharacter>?> pullCharacters(int count) async {
     if (count <= 0 || bits < pullCost * count || gachaPool.isEmpty) {
       return null;
+    }
+    if (_usesServerPulls) {
+      return _pullFromServer(count, tutorial: false);
     }
 
     final List<GameCharacter> results = <GameCharacter>[];
@@ -1100,9 +1084,13 @@ class SpiralAppState extends ChangeNotifier {
     return results;
   }
 
-  List<GameCharacter> tutorialDrawOne() {
+  Future<List<GameCharacter>> tutorialDrawOne() async {
     if (gachaPool.isEmpty) {
       return const <GameCharacter>[];
+    }
+    if (_usesServerPulls) {
+      return await _pullFromServer(1, tutorial: true) ??
+          const <GameCharacter>[];
     }
     if (bits < pullCost) {
       bits += pullCost - bits;
@@ -1116,6 +1104,78 @@ class SpiralAppState extends ChangeNotifier {
     notifyListeners();
     _persistProgress();
     return lastPulledCharacters;
+  }
+
+  // Even when signed in from the offline cache, Firebase builds never roll
+  // locally: the next server load would discard those characters.
+  bool get _usesServerPulls => firebaseEnabled;
+
+  Future<List<GameCharacter>?> _pullFromServer(
+    int count, {
+    required bool tutorial,
+  }) async {
+    if (isPulling) {
+      return null;
+    }
+    isPulling = true;
+    notifyListeners();
+    try {
+      // Let queued progress writes (which include bits) land first, so one
+      // can't arrive after the pull and restore the bits it spent.
+      try {
+        await FirebaseFirestore.instance.waitForPendingWrites().timeout(
+          const Duration(seconds: 5),
+        );
+      } catch (_) {
+        // Offline or slow; the callable below reports the real failure.
+      }
+
+      final HttpsCallableResult<Object?> response;
+      try {
+        response = await FirebaseFunctions.instance
+            .httpsCallable('pullCharacters')
+            .call<Object?>(<String, Object?>{
+              'count': count,
+              'tutorial': tutorial,
+            });
+      } on FirebaseFunctionsException catch (error) {
+        if (error.code == 'failed-precondition') {
+          // Not enough bits (or nothing pullable) according to the server.
+          return null;
+        }
+        rethrow;
+      }
+
+      final Map<Object?, Object?> data = response.data! as Map<Object?, Object?>;
+      _applyServerOwnedProgress(data);
+      bits = (data['bits'] as num?)?.toInt() ?? bits;
+
+      final List<GameCharacter> results = <GameCharacter>[
+        for (final Object? id in data['characterIds'] as List<Object?>)
+          ?findCharacterById(id as String),
+      ];
+      lastPulledCharacters = results;
+      notifyListeners();
+      unawaited(_persistProgress());
+      return results;
+    } finally {
+      isPulling = false;
+      notifyListeners();
+    }
+  }
+
+  /// Applies the fields only the pullCharacters Cloud Function may write.
+  void _applyServerOwnedProgress(Map<Object?, Object?> data) {
+    final Object? collectionData = data['collection'];
+    _collection.clear();
+    if (collectionData is Map) {
+      for (final MapEntry<Object?, Object?> entry in collectionData.entries) {
+        _collection[entry.key as String] = (entry.value as num?)?.toInt() ?? 0;
+      }
+    }
+    totalPulls = (data['totalPulls'] as num?)?.toInt() ?? 0;
+    pityCounter = (data['pityCounter'] as num?)?.toInt() ?? 0;
+    _lastPulledCharacterId = data['lastPulledCharacterId'] as String?;
   }
 
   GameCharacter _performPull() {
@@ -1344,29 +1404,21 @@ class SpiralAppState extends ChangeNotifier {
         return;
       }
 
-      // Last-write-wins by client timestamp. If local progress is newer than
-      // this snapshot (earned offline, or mutated while the fetch was in
-      // flight), push local up instead of clobbering it.
+      // Pull results only ever change on the server, so they always win.
+      _applyServerOwnedProgress(data);
+
+      // Everything else is last-write-wins by client timestamp. If local
+      // progress is newer than this snapshot (earned offline, or mutated while
+      // the fetch was in flight), push local up instead of clobbering it.
       final int serverUpdatedAt =
           (data['updatedAtClient'] as num?)?.toInt() ?? 0;
       if (serverUpdatedAt < _progressUpdatedAt) {
+        notifyListeners();
         await _persistProgress();
         return;
       }
       _progressUpdatedAt = serverUpdatedAt;
 
-      final Map<String, dynamic> collectionData =
-          (data['collection'] as Map<String, dynamic>?) ?? <String, dynamic>{};
-      _collection
-        ..clear()
-        ..addEntries(
-          collectionData.entries.map(
-            (MapEntry<String, dynamic> entry) => MapEntry<String, int>(
-              entry.key,
-              (entry.value as num?)?.toInt() ?? 0,
-            ),
-          ),
-        );
       difficulty = _difficultyFromName(data['difficulty'] as String?);
       soundEnabled = data['soundEnabled'] as bool? ?? soundEnabled;
       ambientSoundsEnabled =
@@ -1384,15 +1436,12 @@ class SpiralAppState extends ChangeNotifier {
       bestSessionSeconds =
           (data['bestSessionSeconds'] as num?)?.toInt() ?? bestSessionSeconds;
       bits = (data['bits'] as num?)?.toInt() ?? bits;
-      totalPulls = (data['totalPulls'] as num?)?.toInt() ?? totalPulls;
-      pityCounter = (data['pityCounter'] as num?)?.toInt() ?? pityCounter;
       hasCompletedTutorial =
           data['hasCompletedTutorial'] as bool? ?? hasCompletedTutorial;
       themeMode = _themeModeFromName(data['themeMode'] as String?);
       accentStyle = _accentStyleFromName(
         data['accentStyle'] as String? ?? data['backgroundStyle'] as String?,
       );
-      _lastPulledCharacterId = data['lastPulledCharacterId'] as String?;
       _applySessionHistoryData(data['sessionHistory']);
       await _persistLocalCache();
       notifyListeners();
@@ -1416,8 +1465,9 @@ class SpiralAppState extends ChangeNotifier {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(playerId)
+          // collection, totalPulls, pityCounter and lastPulledCharacterId are
+          // written only by the pullCharacters Cloud Function.
           .set(<String, Object?>{
-            'collection': _collection,
             'difficulty': difficulty.name,
             'soundEnabled': soundEnabled,
             'ambientSoundsEnabled': ambientSoundsEnabled,
@@ -1429,12 +1479,9 @@ class SpiralAppState extends ChangeNotifier {
             'totalFocusMinutes': totalFocusMinutes,
             'bestSessionSeconds': bestSessionSeconds,
             'bits': bits,
-            'totalPulls': totalPulls,
-            'pityCounter': pityCounter,
             'hasCompletedTutorial': hasCompletedTutorial,
             'themeMode': themeMode.name,
             'accentStyle': accentStyle.name,
-            'lastPulledCharacterId': _lastPulledCharacterId,
             'sessionHistory': _sessionHistoryData(),
             'updatedAtClient': _progressUpdatedAt,
             'updatedAt': FieldValue.serverTimestamp(),
