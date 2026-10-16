@@ -202,18 +202,10 @@ class SpiralAppState extends ChangeNotifier {
   SpiralAppState({
     required List<GameCharacter> roster,
     this.firebaseEnabled = false,
-    bool enforceFeaturedCharacters = false,
+    List<GameCharacter> bundledCharacters = const <GameCharacter>[],
     Stream<List<GameCharacter>>? characterUpdates,
-  }) : _characterCatalog = List<GameCharacter>.unmodifiable(roster) {
-    _enforceFeaturedCharacters = enforceFeaturedCharacters;
-    _featuredCharacters = <String, GameCharacter>{
-      for (final GameCharacter character in roster)
-        if (_featuredCharacterIds.contains(character.id))
-          character.id: character,
-    };
-    if (_enforceFeaturedCharacters) {
-      _characterCatalog = _applyFeaturedCharacterPolicy(roster);
-    }
+  }) : _bundledCharacters = List<GameCharacter>.unmodifiable(bundledCharacters),
+       _characterCatalog = mergeBundledCharacters(roster, bundledCharacters) {
     final Stream<List<GameCharacter>>? updates =
         characterUpdates ?? (firebaseEnabled ? watchCharacterRoster() : null);
     _characterSubscription = updates?.listen(
@@ -260,46 +252,15 @@ class SpiralAppState extends ChangeNotifier {
 
   final Random _random = Random();
   List<GameCharacter> _characterCatalog;
-  late final bool _enforceFeaturedCharacters;
-  late final Map<String, GameCharacter> _featuredCharacters;
+  final List<GameCharacter> _bundledCharacters;
   StreamSubscription<List<GameCharacter>>? _characterSubscription;
-
-  static const Set<String> _featuredCharacterIds = <String>{
-    'axel',
-    'holder',
-    'e-holder',
-    'l-holder',
-  };
-
-  List<GameCharacter> _applyFeaturedCharacterPolicy(
-    List<GameCharacter> incoming,
-  ) {
-    final Map<String, GameCharacter> characters = <String, GameCharacter>{
-      for (final GameCharacter character in incoming) character.id: character,
-    };
-    // Keep the bundled artwork and details available when an older Firestore
-    // catalog has not been updated with the featured characters yet.
-    characters.addAll(_featuredCharacters);
-    return List<GameCharacter>.unmodifiable(
-      characters.values.map((GameCharacter character) {
-        final bool featured = _featuredCharacterIds.contains(character.id);
-        return GameCharacter.fromJson(<String, dynamic>{
-          ...character.toJson(),
-          'pullable': featured,
-          'hidden': !featured,
-        });
-      }),
-    );
-  }
 
   List<GameCharacter> get roster => List<GameCharacter>.unmodifiable(
     _characterCatalog.where((character) => !character.hidden),
   );
 
   void updateCharacterRoster(List<GameCharacter> characters) {
-    _characterCatalog = _enforceFeaturedCharacters
-        ? _applyFeaturedCharacterPolicy(characters)
-        : List<GameCharacter>.unmodifiable(characters);
+    _characterCatalog = mergeBundledCharacters(characters, _bundledCharacters);
     notifyListeners();
   }
 

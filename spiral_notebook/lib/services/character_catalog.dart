@@ -62,6 +62,24 @@ List<GameCharacter> parseCharacterCatalogDocument(Map<String, dynamic> data) {
   return parseCharacterRoster(jsonEncode(data['characters']));
 }
 
+/// Bundled artwork ships with an app update, so a live catalog published before
+/// that update cannot know about it. Live entries win for every ID they
+/// contain; bundled characters the live catalog has never listed are appended.
+List<GameCharacter> mergeBundledCharacters(
+  List<GameCharacter> live,
+  List<GameCharacter> bundled,
+) {
+  final Set<String> liveIds = <String>{
+    for (final GameCharacter character in live) character.id,
+  };
+  return List<GameCharacter>.unmodifiable(<GameCharacter>[
+    ...live,
+    ...bundled.where(
+      (GameCharacter character) => !liveIds.contains(character.id),
+    ),
+  ]);
+}
+
 List<GameCharacter> parseCharacterRoster(String source) {
   final List<dynamic> entries = jsonDecode(source) as List<dynamic>;
   final Set<String> ids = <String>{};

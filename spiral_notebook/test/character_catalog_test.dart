@@ -39,27 +39,66 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  test('bundled catalog loads Axel and both bundled images', () async {
+  const List<String> releasedIds = <String>[
+    'axel',
+    'holder',
+    'e-holder',
+    'l-holder',
+  ];
+
+  test('bundled catalog releases only characters with bundled art', () async {
     final List<GameCharacter> roster = await loadCharacterRoster();
-    expect(roster, hasLength(43));
-    expect(roster.where((item) => item.pullable).map((item) => item.id), [
-      'axel',
-    ]);
-    expect(roster.where((item) => !item.hidden).map((item) => item.id), [
-      'axel',
-    ]);
+    expect(roster, hasLength(46));
+    expect(
+      roster.where((item) => !item.hidden).map((item) => item.id),
+      releasedIds,
+    );
+    expect(
+      roster.where((item) => item.pullable).map((item) => item.id),
+      releasedIds,
+    );
     final GameCharacter axel = roster.singleWhere((item) => item.id == 'axel');
     expect(axel.name, 'Axel');
     expect(axel.rarity, CharacterRarity.common);
     expect(axel.description, contains('Skelly'));
-    expect(
-      (await rootBundle.load(axel.portraitAsset)).lengthInBytes,
-      greaterThan(0),
+    for (final GameCharacter released in roster.where((item) => !item.hidden)) {
+      expect(released.portraitAsset, isNot('assets/overview.png'));
+      expect(released.mainAsset, isNot('assets/fullview.png'));
+      expect(
+        (await rootBundle.load(released.portraitAsset)).lengthInBytes,
+        greaterThan(0),
+      );
+      expect(
+        (await rootBundle.load(released.mainAsset)).lengthInBytes,
+        greaterThan(0),
+      );
+    }
+  });
+
+  test('bundled characters fill in a live catalog published before them', () {
+    // The live catalog was seeded before the holders' artwork was bundled.
+    final List<GameCharacter> staleLive = bundledCharacterRoster
+        .where((item) => !item.id.endsWith('holder'))
+        .toList();
+    final SpiralAppState state = SpiralAppState(
+      roster: staleLive,
+      bundledCharacters: bundledCharacterRoster,
     );
-    expect(
-      (await rootBundle.load(axel.mainAsset)).lengthInBytes,
-      greaterThan(0),
-    );
+    addTearDown(state.dispose);
+    expect(state.roster.map((item) => item.id), releasedIds);
+    expect(state.gachaPool.map((item) => item.id), releasedIds);
+    expect(state.gachaRates.values.every((rate) => rate > 0), isTrue);
+
+    // Live entries still win for IDs they list.
+    state.updateCharacterRoster([
+      ...staleLive,
+      character('holder', CharacterRarity.rare, hidden: true),
+    ]);
+    expect(state.roster.map((item) => item.id), [
+      'axel',
+      'e-holder',
+      'l-holder',
+    ]);
   });
 
   test('catalog rejects duplicate IDs and missing pullable flags', () {
@@ -233,8 +272,10 @@ void main() {
       expect(await loadCharacterRoster(), isEmpty);
       await prefs.setString(characterCatalogCacheKey, '{bad json');
       expect(
-        (await loadCharacterRoster()).where((item) => !item.hidden).single.id,
-        'axel',
+        (await loadCharacterRoster())
+            .where((item) => !item.hidden)
+            .map((item) => item.id),
+        releasedIds,
       );
     },
   );

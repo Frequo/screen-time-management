@@ -26,6 +26,12 @@ for (const character of characters) {
       throw new Error(`Expected HTTPS ${field}: ${character.id}`);
     }
   }
+  // Characters awaiting artwork stay hidden until real images are bundled or hosted.
+  const placeholderArt = (character.portraitUrl == null && (character.portraitAsset ?? 'assets/overview.png') === 'assets/overview.png') ||
+      (character.mainUrl == null && (character.mainAsset ?? 'assets/fullview.png') === 'assets/fullview.png');
+  if (!character.hidden && placeholderArt) {
+    throw new Error(`Visible character still uses placeholder art: ${character.id}`);
+  }
   ids.add(character.id);
 }
 
