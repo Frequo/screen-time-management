@@ -19,8 +19,12 @@ required booleans:
 - `hidden`: omitted from the roster, profiles, recent results, and draw pools,
   including when already owned. Hidden overrides pullable.
 
-Axel is Common with `pullable: true` and `hidden: false`. The other 42
-characters have `pullable: false` and `hidden: true`. A visible but unpullable
+Four characters have artwork and are released with `pullable: true` and
+`hidden: false`: Axel (Common), Holder (Rare), E-Holder (Epic), and L-Holder
+(Legendary). The other 42 are awaiting artwork and have `pullable: false` and
+`hidden: true`; keep a character hidden until it has real portrait and main
+images (the seed script rejects visible characters using placeholder art).
+A visible but unpullable
 character can remain in the collection after a limited release. Preserve IDs
 when editing: hiding or removing entries does not delete players' owned copies.
 Hidden is a UI setting; the shared catalog can still be read by clients.
@@ -37,11 +41,14 @@ on first launch, then subscribes to Firestore. Missing, malformed, or inaccessib
 remote data leaves the last usable catalog in place. Publish an empty
 `characters` array to intentionally clear the roster; deleting the document
 does not clear cached content. The JSON file is the bootstrap/offline fallback
-and initial migration input, not the live source after Firestore is populated.
+and initial migration input, not the live source after Firestore is populated,
+with one exception: bundled characters whose IDs the live catalog does not list
+at all are appended to it, so artwork shipped in an app update appears before
+the live document is edited. To hide such a character remotely, add its entry
+to the live catalog with `hidden: true`.
 
 Rarity weights remain 68/22/9/1 when all rarities are available. Empty pools are
-excluded and the remaining weights normalized. With only Axel released, Common
-is 100%. Pity accumulates until a visible, pullable legendary is released. An
+excluded and the remaining weights normalized. Pity accumulates until a visible, pullable legendary is released. An
 empty draw pool disables draws without spending bits or changing pity.
 
 ### First-time Firestore migration

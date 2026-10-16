@@ -13,13 +13,16 @@ import 'package:spiral_notebook/theme/app_palette.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final List<GameCharacter> roster = await loadCharacterRoster();
+  final List<GameCharacter> bundledCharacters = await loadCharacterRoster(
+    useCache: false,
+  );
   final bool firebaseEnabled = await _initializeFirebase();
   runApp(
     MyApp(
       appState: SpiralAppState(
         roster: roster,
         firebaseEnabled: firebaseEnabled,
-        enforceFeaturedCharacters: true,
+        bundledCharacters: bundledCharacters,
       ),
     ),
   );
