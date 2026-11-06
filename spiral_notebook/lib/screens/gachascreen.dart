@@ -257,6 +257,7 @@ class _BannerStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -269,15 +270,15 @@ class _BannerStat extends StatelessWidget {
         children: <Widget>[
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppPalette.inkMuted),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: isDark ? AppPalette.nightMuted : AppPalette.inkMuted,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppPalette.ink,
+              color: isDark ? const Color(0xFFF4FBFF) : AppPalette.ink,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -302,7 +303,7 @@ class _PityBar extends StatelessWidget {
             Text(
               'Pity left',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white70,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -312,7 +313,7 @@ class _PityBar extends StatelessWidget {
                   ? '${appState.pityRemaining} until guaranteed legendary'
                   : 'Pity saved',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),

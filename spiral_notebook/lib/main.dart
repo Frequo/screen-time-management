@@ -267,13 +267,17 @@ class _MyAppState extends State<MyApp> {
           darkTheme: ThemeData(
             useMaterial3: true,
             fontFamily: 'ShortStack',
+            textTheme: ThemeData(brightness: Brightness.dark).textTheme.apply(
+              bodyColor: const Color(0xFFF4FBFF),
+              displayColor: const Color(0xFFF4FBFF),
+            ),
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
               seedColor: accentStyle.darkPrimary,
               primary: accentStyle.darkPrimary,
               onPrimary: Colors.white,
               secondary: accentStyle.darkSecondary,
-              onSecondary: AppPalette.ink,
+              onSecondary: const Color(0xFFF4FBFF),
               tertiary: AppPalette.tangerine,
               onTertiary: Colors.white,
               error: Color(0xFFFF7B73),
@@ -321,7 +325,7 @@ class _MyAppState extends State<MyApp> {
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
                 backgroundColor: accentStyle.darkPrimary,
-                foregroundColor: AppPalette.ink,
+                foregroundColor: const Color(0xFFF4FBFF),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,

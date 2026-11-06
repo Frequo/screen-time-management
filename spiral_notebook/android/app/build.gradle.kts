@@ -27,15 +27,11 @@ val hasReleaseSigningConfig = listOf(
 android {
     namespace = "com.mia.focugacha"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
     }
 
     defaultConfig {
@@ -68,6 +64,12 @@ android {
                 signingConfigs.getByName("debug")
             }
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
